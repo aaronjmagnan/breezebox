@@ -1,0 +1,63 @@
+# Breeze Box local Supabase stack.
+# One shared project, every table scoped by district_id + RLS (backbone §3).
+project_id = "breezebox"
+
+[api]
+enabled = true
+port = 54321
+# `app` is intentionally absent: the RLS helper schema is never exposed.
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+# Local dev runs the shell on a district subdomain of *.localhost (§8).
+site_url = "http://demo.localhost:3000"
+additional_redirect_urls = [
+  "http://localhost:3000/auth/callback",
+  "http://localhost:3000/**",
+  "http://demo.localhost:3000/auth/callback",
+  "http://demo.localhost:3000/**",
+  "http://*.localhost:3000/**",
+]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+
+[auth.email]
+enable_signup = false
+enable_confirmations = false
+
+# §5: Google and Microsoft only. Fill the env vars in .env.local to test
+# locally; both are wired but disabled by default so `supabase start` works
+# without credentials.
+[auth.external.google]
+enabled = false
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
+skip_nonce_check = false
+
+[auth.external.azure]
+enabled = false
+client_id = "env(SUPABASE_AUTH_AZURE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_AZURE_SECRET)"
+url = "env(SUPABASE_AUTH_AZURE_URL)"

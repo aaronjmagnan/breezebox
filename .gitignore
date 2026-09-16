@@ -1,0 +1,23 @@
+node_modules/
+.pnpm-store/
+.turbo/
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+
+.env
+.env.local
+.env.*.local
+!.env.example
+
+.vercel
+.DS_Store
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Supabase CLI local state
+packages/db/supabase/.branches/
+packages/db/supabase/.temp/
