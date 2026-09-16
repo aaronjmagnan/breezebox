@@ -256,6 +256,11 @@ Sign-in is Google and Microsoft OAuth through Supabase Auth. All of it lives in
 `packages/auth`; the shell and every tool import from there and never
 reimplement login.
 
+**Setting it up for the first time: [docs/oauth-setup.md](docs/oauth-setup.md)**
+— click-by-click for both providers, the redirect URL list, and the traps
+(Google's Testing mode expiring refresh tokens after 7 days, Azure's secret
+Value vs Secret ID).
+
 ### The redirect chain
 
 The providers only ever know **one** redirect URI: Supabase's own callback.
