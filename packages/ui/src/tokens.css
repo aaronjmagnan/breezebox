@@ -3,11 +3,18 @@
  *
  * Imported once by the shell. Tools inherit them from the same origin.
  *
- * Accent contrast on white, measured:
- *   soft tone  blue 4.20  teal 4.03  amber 3.73  coral 4.18   (decorative)
- *   ink tone   blue 6.21  teal 6.00  amber 5.91  coral 6.19   (AA for text)
+ * Every component reads these through the Tailwind preset, so dark mode is
+ * entirely a matter of redefining the variables below. No component knows
+ * which mode it is in.
+ *
+ * NOTE ON OPACITY: do not write `bg-bb-text/90`. Tailwind can only apply an
+ * opacity modifier to a color whose variable holds raw channels, and these
+ * hold hex. It does not warn -- it silently emits nothing. That is why the
+ * pressed and hover states below are their own tokens rather than an alpha.
  */
 :root {
+  color-scheme: light;
+
   --bb-bg: #f6f7f9;
   --bb-surface: #ffffff;
   --bb-surface-subtle: #e7eaee;
@@ -16,14 +23,56 @@
   --bb-text-muted: #5b646e;
   --bb-focus: #356491;
 
+  /* The primary button: a filled block of the text color. */
+  --bb-invert: #1a1d21;
+  --bb-invert-hover: #2b3037;
+  --bb-invert-active: #383f48;
+  --bb-on-invert: #ffffff;
+
+  /*
+   * The four accents (§6).
+   *
+   * The soft tone is the brand value and is identical in both modes: it is
+   * only ever a 4px rule or similar, where 4:1 is plenty.
+   *
+   * The ink tone carries meaning (glyphs, text) and flips between modes to
+   * hold at least 5.7:1 against whichever surface it lands on.
+   */
   --bb-accent-blue: #4a7fb5;
-  --bb-accent-blue-ink: #356491;
   --bb-accent-teal: #2f8c86;
-  --bb-accent-teal-ink: #226e69;
   --bb-accent-amber: #b5771f;
-  --bb-accent-amber-ink: #8a5a15;
   --bb-accent-coral: #c85a4e;
+
+  /* on #ffffff: 6.21 / 6.00 / 5.91 / 6.19 */
+  --bb-accent-blue-ink: #356491;
+  --bb-accent-teal-ink: #226e69;
+  --bb-accent-amber-ink: #8a5a15;
   --bb-accent-coral-ink: #a34238;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --bb-bg: #12151a;
+    --bb-surface: #1a1e25;
+    --bb-surface-subtle: #262b34;
+    --bb-border: #333a45;
+    --bb-text: #e8ebef;
+    --bb-text-muted: #a0a8b4;
+    --bb-focus: #7fb0e0;
+
+    --bb-invert: #e8ebef;
+    --bb-invert-hover: #d5dae1;
+    --bb-invert-active: #c3c9d2;
+    --bb-on-invert: #12151a;
+
+    /* on #1a1e25: 6.01 / 6.35 / 6.83 / 5.72 */
+    --bb-accent-blue-ink: #6c9fd4;
+    --bb-accent-teal-ink: #48afa8;
+    --bb-accent-amber-ink: #d79a3c;
+    --bb-accent-coral-ink: #e2796c;
+  }
 }
 
 /*

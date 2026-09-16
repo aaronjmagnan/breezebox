@@ -19,8 +19,10 @@ const BASE =
   'aria-disabled:cursor-not-allowed aria-disabled:opacity-60';
 
 const VARIANTS: Record<ButtonVariant, string> = {
+  // Explicit tokens rather than an alpha of bb-text: see the note in
+  // tokens.css about opacity modifiers silently producing nothing.
   primary:
-    'bg-bb-text text-bb-surface hover:bg-bb-text/90 active:bg-bb-text/80',
+    'bg-bb-invert text-bb-on-invert hover:bg-bb-invert-hover active:bg-bb-invert-active',
   secondary:
     'border border-bb-border bg-bb-surface text-bb-text hover:bg-bb-surface-subtle active:bg-bb-surface-subtle',
   ghost:

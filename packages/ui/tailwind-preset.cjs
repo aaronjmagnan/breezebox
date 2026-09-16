@@ -16,6 +16,13 @@
  *     a focus ring. Surfaces stay neutral. In the shell, Tile is the only
  *     component that touches an accent at all.
  *
+ * Both are redefined under `prefers-color-scheme: dark` in tokens.css, so a
+ * component never knows which mode it is in.
+ *
+ * Do NOT use an opacity modifier on these (`bg-bb-text/90`). The variables
+ * hold hex, not channels, and Tailwind silently emits nothing rather than
+ * warning. Hover and pressed states have their own tokens for that reason.
+ *
  * Each accent comes in two tones:
  *   - the soft §6 tone, for decorative marks where contrast does not apply
  *   - `-ink`, darkened to at least 5.9:1 on white, for anything that carries
@@ -38,6 +45,10 @@ module.exports = {
           text: 'var(--bb-text)',
           muted: 'var(--bb-text-muted)',
           focus: 'var(--bb-focus)',
+          invert: 'var(--bb-invert)',
+          'invert-hover': 'var(--bb-invert-hover)',
+          'invert-active': 'var(--bb-invert-active)',
+          'on-invert': 'var(--bb-on-invert)',
         },
         accent: {
           blue: 'var(--bb-accent-blue)',
@@ -67,6 +78,11 @@ module.exports = {
       },
       borderRadius: {
         bb: '0.75rem',
+      },
+      ringOffsetColor: {
+        // Tailwind's default is a hard-coded white, which draws a white halo
+        // around every focused control in dark mode.
+        DEFAULT: 'var(--bb-bg)',
       },
       minHeight: {
         // §6: tap targets at least 44px. Never go below this on anything

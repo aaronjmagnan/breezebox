@@ -133,9 +133,37 @@ Verified in a headless browser at 360px and 1280px across the landing page,
 sign-in, denied and both not-found pages: no interactive element under 44px, no
 horizontal overflow, and only weights 400 and 600 rendering.
 
-Not built, and worth knowing: **no dark mode**. The backbone does not ask for
-it and it would double the token work. Adding it later means a second block in
-`tokens.css`, not a component rewrite.
+### Dark mode
+
+Follows the device setting via `prefers-color-scheme`. It is entirely a matter
+of redefining variables in `tokens.css`; no component knows which mode it is
+in.
+
+The soft accent tone is identical in both modes — it is only ever a 4px rule,
+where 4:1 is plenty, and keeping it constant keeps the brand constant. The ink
+tone flips lighter in dark mode to hold at least 5.7:1 against the dark
+surface:
+
+| Accent | Ink (light) | Ink (dark) | Contrast on dark surface |
+| --- | --- | --- | --- |
+| blue | `#356491` | `#6C9FD4` | 6.01 |
+| teal | `#226E69` | `#48AFA8` | 6.35 |
+| amber | `#8A5A15` | `#D79A3C` | 6.83 |
+| coral | `#A34238` | `#E2796C` | 5.72 |
+
+Audited in a headless browser in both schemes: no text below 4.5:1 against its
+computed background.
+
+### One trap, written down because it cost an hour
+
+**Never use a Tailwind opacity modifier on these colors** — `bg-bb-text/90`,
+`text-bb-muted/70`, any of them. The variables hold hex, not raw channels, so
+Tailwind cannot compose an alpha. It does not warn or error: it silently emits
+**nothing**, and the class does nothing at runtime. The primary button shipped
+with no hover state at all this way.
+
+Hover and pressed states have their own tokens (`--bb-invert-hover`,
+`--bb-invert-active`) for exactly this reason.
 
 ## Auth setup (§5)
 
