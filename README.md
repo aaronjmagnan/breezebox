@@ -378,6 +378,21 @@ Two things that will bite you:
   tool's preview URL and production at its production URL, or preview traffic
   will proxy into production.
 
+## Testing
+
+Automated:
+
+```bash
+pnpm --filter @breezebox/db test   # 60 RLS assertions, cross-district isolation
+pnpm typecheck && pnpm build
+```
+
+Everything a terminal cannot reach — real Google and Microsoft sign-in, the
+installed app on iPhone, Android and laptop, wrong-domain rejection, the
+install and update prompts, offline behaviour — is in
+**[docs/manual-test-checklist.md](docs/manual-test-checklist.md)**. Run it top
+to bottom; each section assumes the ones above it passed.
+
 ## Applying the schema to a hosted Supabase project
 
 Two ways, depending on whether the project is linked to the CLI.
