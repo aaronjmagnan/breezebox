@@ -65,10 +65,43 @@ resolve to `127.0.0.1` in every current browser with no `/etc/hosts` edit.
 pnpm --filter @breezebox/db test
 ```
 
-Runs `packages/db/supabase/tests/rls_isolation.sql`: 66 assertions covering
+Runs `packages/db/supabase/tests/rls_isolation.sql`: 60 assertions covering
 cross-district reads and writes, privilege escalation, wrong-domain sign-in,
 and first-login provisioning. It runs inside a transaction that rolls back, so
 it leaves your local data alone.
+
+## Applying the schema to a hosted Supabase project
+
+Two ways, depending on whether the project is linked to the CLI.
+
+**Linked project (preferred).** Migrations are tracked, so the next one knows
+where to start:
+
+```bash
+supabase link --project-ref <your-project-ref> --workdir packages/db
+pnpm db:push
+```
+
+**SQL editor.** For a project you have not linked, generate one script and
+paste it in:
+
+```bash
+pnpm --filter @breezebox/db bundle     # writes packages/db/supabase/bundle.sql
+```
+
+It concatenates all 12 migrations in order inside a single transaction, so a
+failure anywhere leaves the project untouched. Run it once against a project
+that does not already have these objects.
+
+Caveat worth knowing: the bundle does **not** record anything in Supabase's
+migration history. If you start with the bundle and later switch to
+`pnpm db:push`, the CLI will try to re-run everything. Pick one and stay with
+it, or run `supabase migration repair --status applied <version>` for each
+file after bundling.
+
+Do **not** run `seed.sql` against a real project: it creates the fake "demo"
+district. `tests/rls_isolation.sql` is safe anywhere (it rolls back), but run
+it on staging rather than production.
 
 ## Environment variables
 

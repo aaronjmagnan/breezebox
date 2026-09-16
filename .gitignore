@@ -21,3 +21,6 @@ pnpm-debug.log*
 # Supabase CLI local state
 packages/db/supabase/.branches/
 packages/db/supabase/.temp/
+
+# Generated on demand by `pnpm --filter @breezebox/db bundle`
+packages/db/supabase/bundle.sql
