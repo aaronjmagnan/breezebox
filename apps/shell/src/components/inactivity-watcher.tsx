@@ -1,15 +1,15 @@
 'use client';
 
+import { Button, Card } from '@breezebox/ui';
 import { useInactivitySignOut } from '@breezebox/auth/client';
 
 /**
- * §11 session safety: auto sign-out after inactivity, configurable per
- * district, default 30 minutes.
+ * §11 session safety: auto sign-out after inactivity, per-district, default 30
+ * minutes.
  *
- * Mounted once from the signed-in layout. The warning is a live region so a
- * screen reader announces it, and both controls clear 44px.
- *
- * Step 5 rebuilds the warning from @breezebox/ui components.
+ * Mounted once per signed-in screen. The countdown is a live region so it is
+ * announced rather than only seen, and the control clears 44px because it is
+ * the one thing standing between a teacher and losing their place.
  */
 export function InactivityWatcher({ timeoutMinutes }: { timeoutMinutes: number }) {
   const { warning, secondsRemaining, staySignedIn } = useInactivitySignOut({
@@ -19,25 +19,21 @@ export function InactivityWatcher({ timeoutMinutes }: { timeoutMinutes: number }
   if (!warning) return null;
 
   return (
-    <div
-      role="alertdialog"
-      aria-live="assertive"
-      aria-label="Signing out soon"
-      className="fixed inset-x-0 bottom-0 z-50 border-t p-4"
-    >
-      <div className="mx-auto flex max-w-md flex-col gap-3">
-        <p className="text-base">
+    <div className="fixed inset-x-0 bottom-0 z-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <Card
+        as="section"
+        role="alertdialog"
+        aria-label="Signing out soon"
+        className="mx-auto max-w-md shadow-lg"
+      >
+        <p aria-live="assertive" className="text-base">
           Signing you out in {secondsRemaining ?? 0} second
           {secondsRemaining === 1 ? '' : 's'}.
         </p>
-        <button
-          type="button"
-          onClick={staySignedIn}
-          className="inline-flex min-h-[48px] items-center justify-center rounded-lg border px-4 text-base"
-        >
+        <Button variant="primary" fullWidth className="mt-4" onClick={staySignedIn}>
           Stay signed in
-        </button>
-      </div>
+        </Button>
+      </Card>
     </div>
   );
 }

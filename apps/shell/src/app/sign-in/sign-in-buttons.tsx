@@ -1,15 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@breezebox/ui';
 import { OAUTH_PROVIDERS, PROVIDER_LABELS, type OAuthProvider } from '@breezebox/auth';
 import { signInWithProvider } from '@breezebox/auth/client';
 
-/**
- * Minimal for now. Step 5 rebuilds this from @breezebox/ui components.
- *
- * Tap targets are 48px, above the 44px floor in §6, because this is the one
- * screen every user hits on a phone.
- */
 export function SignInButtons({ next }: { next: string }) {
   const [pending, setPending] = useState<OAuthProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,21 +23,21 @@ export function SignInButtons({ next }: { next: string }) {
   return (
     <div className="mt-8 flex flex-col gap-3">
       {OAUTH_PROVIDERS.map((provider) => (
-        <button
+        <Button
           key={provider}
-          type="button"
-          onClick={() => void start(provider)}
+          variant={provider === 'google' ? 'primary' : 'secondary'}
+          fullWidth
           disabled={pending !== null}
-          className="inline-flex min-h-[48px] w-full items-center justify-center rounded-lg border px-4 text-base disabled:opacity-60"
+          onClick={() => void start(provider)}
         >
           {pending === provider
             ? `Opening ${PROVIDER_LABELS[provider]}…`
             : `Continue with ${PROVIDER_LABELS[provider]}`}
-        </button>
+        </Button>
       ))}
 
       {error ? (
-        <p role="alert" className="text-sm">
+        <p role="alert" className="text-sm text-bb-muted">
           {error}
         </p>
       ) : null}

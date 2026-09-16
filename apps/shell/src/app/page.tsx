@@ -1,33 +1,65 @@
-import { redirect } from 'next/navigation';
-import { SIGN_IN_PATH } from '@breezebox/auth';
-import { getSessionContext } from '@breezebox/auth/server';
-import { requireDistrict } from '@/lib/district/server';
+import { AppHeader, Card, Tile } from '@breezebox/ui';
+import { requireDistrictSession } from '@/lib/session';
+import { listActiveTools } from '@/lib/tools';
 import { InactivityWatcher } from '@/components/inactivity-watcher';
+import { SignOutButton } from '@/components/sign-out-button';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Placeholder landing page. Step 5 replaces the body with the tile grid over
- * the district's active tool_instances (§8), built from @breezebox/ui only.
+ * The district landing page (backbone §8).
  *
- * Phone first.
+ * PHONE FIRST. A teacher opening the installed app on a phone between classes
+ * is the design target; the laptop view is the same grid with more columns.
+ *
+ * Deliberately absent, per §8: no roster picker, no cross-tool search, no data
+ * query bar. Those are workflow and impact tier features, not shell features.
  */
 export default async function Page() {
-  const district = await requireDistrict();
-  const session = await getSessionContext();
-
-  // No staff row means the domain check refused them or their account was
-  // turned off. Either way they have no district, so treat them as signed out.
-  if (!session.signedIn || !session.staff) redirect(SIGN_IN_PATH);
+  const { district, staff, inactivityTimeoutMinutes } = await requireDistrictSession();
+  const tools = await listActiveTools();
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-12">
-      <InactivityWatcher timeoutMinutes={session.inactivityTimeoutMinutes} />
+    <>
+      <AppHeader
+        districtName={district.name}
+        iconUrl={district.icon_url}
+        asHeading
+        actions={<SignOutButton />}
+      />
 
-      <h1 className="text-2xl">{district.name}</h1>
-      <p className="mt-2 text-base">
-        Signed in as {session.staff.name}. The tile grid is step 5.
-      </p>
-    </main>
+      <main className="mx-auto w-full max-w-3xl px-4 py-6">
+        <h2 className="text-xl font-semibold">Your apps</h2>
+        <p className="mt-1 text-sm text-bb-muted">Signed in as {staff.name}</p>
+
+        {tools.length === 0 ? (
+          <Card as="section" className="mt-6">
+            <h2 className="text-base font-semibold">No apps yet</h2>
+            <p className="mt-2 text-sm leading-relaxed text-bb-muted">
+              Nothing has been switched on for {district.name} yet. When your
+              district adds an app it will show up here, and you will not need
+              to install anything new.
+            </p>
+          </Card>
+        ) : (
+          <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {tools.map((tool) => (
+              <li key={tool.id} className="flex">
+                <Tile
+                  href={`/${tool.tool_slug}`}
+                  name={tool.name}
+                  description={tool.description}
+                  icon={tool.icon}
+                  accent={tool.accent}
+                  className="w-full"
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
+
+      <InactivityWatcher timeoutMinutes={inactivityTimeoutMinutes} />
+    </>
   );
 }

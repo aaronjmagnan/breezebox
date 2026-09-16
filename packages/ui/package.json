@@ -10,12 +10,20 @@
     "./tailwind-preset": "./tailwind-preset.cjs",
     "./tokens.css": "./src/tokens.css"
   },
-  "scripts": { "typecheck": "tsc --noEmit" },
-  "peerDependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
   "devDependencies": {
     "@types/react": "^19.0.2",
     "react": "^19.0.0",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@breezebox/db": "workspace:*"
   }
 }

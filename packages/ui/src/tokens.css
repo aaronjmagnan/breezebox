@@ -1,0 +1,41 @@
+/**
+ * Breeze Box design tokens (backbone §6).
+ *
+ * Imported once by the shell. Tools inherit them from the same origin.
+ *
+ * Accent contrast on white, measured:
+ *   soft tone  blue 4.20  teal 4.03  amber 3.73  coral 4.18   (decorative)
+ *   ink tone   blue 6.21  teal 6.00  amber 5.91  coral 6.19   (AA for text)
+ */
+:root {
+  --bb-bg: #f6f7f9;
+  --bb-surface: #ffffff;
+  --bb-surface-subtle: #e7eaee;
+  --bb-border: #d8dce1;
+  --bb-text: #1a1d21;
+  --bb-text-muted: #5b646e;
+  --bb-focus: #356491;
+
+  --bb-accent-blue: #4a7fb5;
+  --bb-accent-blue-ink: #356491;
+  --bb-accent-teal: #2f8c86;
+  --bb-accent-teal-ink: #226e69;
+  --bb-accent-amber: #b5771f;
+  --bb-accent-amber-ink: #8a5a15;
+  --bb-accent-coral: #c85a4e;
+  --bb-accent-coral-ink: #a34238;
+}
+
+/*
+ * Respect a reduced-motion preference everywhere, once, rather than per
+ * component.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

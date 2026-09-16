@@ -94,6 +94,49 @@ seeded with `slug = 'demo'`. Bare `localhost:3000` resolves to nothing unless
 you set `NEXT_PUBLIC_DEFAULT_DISTRICT_SLUG`, which is also what makes Vercel
 preview URLs usable.
 
+## Design system (§6)
+
+`packages/ui` holds the tokens and the four components the shell is built
+from: `Button`, `Card`, `Tile`, `AppHeader`. The shell uses nothing else, and
+neither should a tool.
+
+Tokens live in two places that have to stay in step:
+
+- `packages/ui/tailwind-preset.cjs` — the Tailwind preset every app extends
+- `packages/ui/src/tokens.css` — the CSS variables the preset points at
+
+Two rules the preset exists to hold:
+
+- **Two font weights only.** `fontWeight` is *replaced*, not extended, so
+  `font-bold` and `font-light` do not exist. A design that seems to need a
+  third weight needs a size or color change instead.
+- **The four accents are used sparingly, never as backgrounds.** Tailwind
+  emits `bg-accent-*` regardless, so this is a convention, not a compile
+  error. In the shell, `Tile` is the only component that touches an accent at
+  all, and it uses it for the glyph and a 4px rule.
+
+Each accent ships in two tones. The soft §6 tone is for decorative marks where
+contrast does not apply; the `-ink` tone is darkened to at least 5.9:1 on white
+for anything carrying meaning:
+
+| Accent | Soft | Contrast | Ink | Contrast |
+| --- | --- | --- | --- | --- |
+| blue | `#4A7FB5` | 4.20 | `#356491` | 6.21 |
+| teal | `#2F8C86` | 4.03 | `#226E69` | 6.00 |
+| amber | `#B5771F` | 3.73 | `#8A5A15` | 5.91 |
+| coral | `#C85A4E` | 4.18 | `#A34238` | 6.19 |
+
+Typography is the system font stack: no webfont request, no layout shift, and
+it already looks native inside the installed app on every platform.
+
+Verified in a headless browser at 360px and 1280px across the landing page,
+sign-in, denied and both not-found pages: no interactive element under 44px, no
+horizontal overflow, and only weights 400 and 600 rendering.
+
+Not built, and worth knowing: **no dark mode**. The backbone does not ask for
+it and it would double the token work. Adding it later means a second block in
+`tokens.css`, not a component rewrite.
+
 ## Auth setup (§5)
 
 Sign-in is Google and Microsoft OAuth through Supabase Auth. All of it lives in
