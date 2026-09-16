@@ -70,6 +70,61 @@ cross-district reads and writes, privilege escalation, wrong-domain sign-in,
 and first-login provisioning. It runs inside a transaction that rolls back, so
 it leaves your local data alone.
 
+## Hostname routing (§8)
+
+`apps/shell/src/middleware.ts` reads the `Host` header on every request, calls
+`get_district_branding()`, and puts the result on an `x-breezebox-district`
+request header. Server components read it with `getDistrict()` /
+`requireDistrict()` from `@/lib/district/server`.
+
+Any inbound copy of that header is stripped before the lookup, on every code
+path, so a client cannot pick its own district by sending the header itself.
+
+A hostname that matches no district is rewritten to `/district-not-found` with
+a 404. The URL is preserved (rewrite, not redirect) and the page says nothing
+about which districts exist.
+
+Lookups are cached in memory per server instance: 60s for a hit, 10s for a
+miss, capped at 500 entries so unknown hostnames cannot grow the map without
+bound.
+
+**Local dev** needs no `/etc/hosts` edit. Every current browser resolves
+`*.localhost` to 127.0.0.1, so `http://demo.localhost:3000` reaches a district
+seeded with `slug = 'demo'`. Bare `localhost:3000` resolves to nothing unless
+you set `NEXT_PUBLIC_DEFAULT_DISTRICT_SLUG`, which is also what makes Vercel
+preview URLs usable.
+
+## Deploying: one Vercel project per app
+
+| App | Vercel project | Domains |
+| --- | --- | --- |
+| `apps/shell` | its own | `*.breezebox.com` + apex `breezebox.com` |
+| each tool | its own | none needed; the `.vercel.app` URL is enough |
+| `apps/admin` | its own | its own domain, never a district subdomain |
+
+Only the shell is reachable by a district. Tools are never visited directly:
+the shell proxies `/{tool-slug}/*` to the tool's deployment with a Next
+rewrite, so the browser only ever talks to the district origin. That is what
+makes one session cover every tool (§5) and one service worker cover the whole
+app (§11).
+
+Wiring a tool up is three things:
+
+1. The tool sets `basePath: '/{tool-slug}'` in its own `next.config`.
+2. Add an entry to `apps/shell/src/config/tool-zones.mjs` and set the env var
+   it names on the **shell** project, pointing at the tool's deployment origin.
+3. Insert a `tool_instances` row for each district that gets the tool.
+
+Two things that will bite you:
+
+- **Deployment Protection** is on by default for new Vercel projects. It will
+  block the shell's server-side proxy requests to a tool, which shows up as a
+  401 page inside the tile rather than an obvious error. Turn it off for tool
+  projects, or use a protection bypass secret.
+- The tool env vars on the shell are **per environment**. Point preview at the
+  tool's preview URL and production at its production URL, or preview traffic
+  will proxy into production.
+
 ## Applying the schema to a hosted Supabase project
 
 Two ways, depending on whether the project is linked to the CLI.
