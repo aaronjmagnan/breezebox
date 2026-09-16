@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { getDistrict } from '@/lib/district/server';
+import { PwaProvider } from '@/components/pwa-provider';
 import './globals.css';
 
 /**
@@ -12,6 +13,13 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: district?.app_name ?? 'Breeze Box',
     applicationName: district?.app_name ?? 'Breeze Box',
+    // Per-district manifest (§11). Served before sign-in, so the install
+    // prompt can appear at all.
+    manifest: '/manifest.webmanifest',
+    icons: {
+      icon: [{ url: '/icons/app?size=192', sizes: '192x192', type: 'image/png' }],
+      apple: [{ url: '/icons/app?size=192', sizes: '192x192', type: 'image/png' }],
+    },
     appleWebApp: {
       capable: true,
       title: district?.app_name ?? 'Breeze Box',
@@ -36,7 +44,10 @@ export async function generateViewport(): Promise<Viewport> {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-dvh">{children}</body>
+      <body className="min-h-dvh">
+        {children}
+        <PwaProvider />
+      </body>
     </html>
   );
 }

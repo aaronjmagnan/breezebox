@@ -2,7 +2,9 @@ import { AppHeader, Card, Tile } from '@breezebox/ui';
 import { requireDistrictSession } from '@/lib/session';
 import { listActiveTools } from '@/lib/tools';
 import { InactivityWatcher } from '@/components/inactivity-watcher';
+import { InstallPrompt } from '@/components/install-prompt';
 import { SignOutButton } from '@/components/sign-out-button';
+import { UpdatePrompt } from '@/components/update-prompt';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,8 +59,10 @@ export default async function Page() {
             ))}
           </ul>
         )}
+        <InstallPrompt />
       </main>
 
+      <UpdatePrompt />
       <InactivityWatcher timeoutMinutes={inactivityTimeoutMinutes} />
     </>
   );

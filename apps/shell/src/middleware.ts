@@ -8,6 +8,15 @@ import {
 } from '@/lib/district/header';
 
 /**
+ * Paths that must render whether or not a hostname resolves to a district.
+ *
+ * /offline is precached by the service worker and served when the network is
+ * gone, so it can never depend on a branding lookup. It carries no district
+ * data for exactly that reason (§11).
+ */
+const DISTRICT_OPTIONAL_PATHS = new Set([DISTRICT_NOT_FOUND_PATH, '/offline']);
+
+/**
  * Hostname routing (backbone §8).
  *
  * {district-slug}.breezebox.com, or a district's own custom_domain. The
@@ -41,8 +50,9 @@ export async function middleware(request: NextRequest) {
   const district = await resolveDistrict(host);
 
   if (!district) {
-    // Already there: render it, and do not loop.
-    if (request.nextUrl.pathname === DISTRICT_NOT_FOUND_PATH) {
+    // Already there, or a page that does not need a district: render it, and
+    // do not loop.
+    if (DISTRICT_OPTIONAL_PATHS.has(request.nextUrl.pathname)) {
       return NextResponse.next({ request: { headers: requestHeaders } });
     }
 

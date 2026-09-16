@@ -1,19 +1,29 @@
 /**
  * @breezebox/pwa
  *
- * Caching rules, the offline capture queue, the update prompt, and the install
- * guide (backbone §11). Only the shell registers a service worker, at root
- * scope; tools never register their own.
+ * Caching rules, the offline capture queue, the update prompt and the install
+ * guide (backbone §11).
  *
- * What lands in step 6:
- *   - cache-first versioned app shell assets; Supabase data network-only
- *   - offline fallback page listing any queued captures
- *   - capture queue in IndexedDB, keyed by tool and user: delete on successful
- *     upload, clear on sign-out, 72-hour expiry with a warning, retry on app
- *     open and on the `online` event, no Background Sync
- *   - "New version available, tap to refresh" when a worker is waiting
- *   - install prompt (Android, desktop Chrome/Edge) and an iOS Safari
- *     "Add to Home Screen" guide
+ * Only the shell registers a service worker, at root scope. Tools never
+ * register their own, and never add caching rules: everything lives in
+ * ./policy so there is one answer to "is this cached?".
+ *
+ * Client-only entry points are in ./client, so a server component importing
+ * the policy constants does not drag hooks into the bundle.
  */
 
-export {};
+export {
+  CACHE_PREFIX,
+  CACHE_FIRST_PREFIXES,
+  NEVER_CACHE_PREFIXES,
+  NETWORK_ONLY_HOST_FRAGMENTS,
+  OFFLINE_PATH,
+  PRECACHE_PATHS,
+  CAPTURE_TTL_MS,
+  CAPTURE_WARN_BEFORE_MS,
+  CAPTURE_MAX_ATTEMPTS,
+  shellCacheName,
+  isManagedCacheName,
+} from './policy';
+
+export type { CaptureItem, NewCapture, CaptureUploader, FlushResult } from './queue';

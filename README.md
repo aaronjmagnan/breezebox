@@ -94,6 +94,91 @@ seeded with `slug = 'demo'`. Bare `localhost:3000` resolves to nothing unless
 you set `NEXT_PUBLIC_DEFAULT_DISTRICT_SLUG`, which is also what makes Vercel
 preview URLs usable.
 
+## PWA (§11)
+
+The whole district-facing platform is one installable app per district: the
+shell and every tool, one origin, one login, one service worker.
+
+### Manifest and icons
+
+`/manifest.webmanifest` is generated per request from `get_district_branding`,
+so each district installs its own app from the same code: `name` and
+`short_name` from `app_name`, its `theme_color`, `start_url: "/"`,
+`scope: "/"`, `display: "standalone"`.
+
+Icons are generated at `/icons/app?size=…` rather than served straight from
+`districts.icon_url`, for two reasons. A manifest needs specific sizes in a
+known format, and a district gives us one URL of unknown dimensions. And §11
+wants a maskable icon: Android crops those to a circle, so an unpadded logo
+declared maskable comes out visibly clipped. The maskable variant is drawn at
+62% on the district's theme color, which survives every mask shape. Districts
+with no icon get their initials on their theme color.
+
+### The one service worker
+
+Served from `/sw.js` by a route handler, which is what gives it root scope and
+therefore coverage of every tool zone. The source is generated from
+`packages/pwa/src/policy.ts`, so the caching rules have exactly one definition
+instead of drifting between a package and a static file. **Tools never register
+a worker.**
+
+Three rules, in order of how much they matter:
+
+1. **District data is network only.** Nothing from Supabase is ever written to
+   a cache. This is the one that would hurt most to get wrong, and the easiest
+   to break later by adding a convenient stale-while-revalidate.
+2. App shell assets are cache-first and versioned. Immutable build output only
+   (`/_next/static`, content-hashed), never a rendered page.
+3. Navigations are network-first with the offline page as fallback. A rendered
+   page can carry district data, so it is never stored.
+
+Cache version comes from `VERCEL_GIT_COMMIT_SHA`, or `BB_BUILD_ID` to force it
+by hand. Locally it is `dev`.
+
+### Updates
+
+The worker never calls `skipWaiting()` on its own. A new deploy sits in
+`waiting` until the user taps "New version available, tap to refresh". Swapping
+code out from under someone half way through a form is what §11's "never leave
+users on stale code silently" is guarding against, and the fix is to tell them,
+not to reload under them.
+
+### Capture queue
+
+Built now, used by nothing yet, so the first capture tool inherits a queue that
+has been thought through rather than inventing one under deadline. A tool calls
+`enqueueCapture` and registers an uploader with `registerCaptureUploader`.
+
+IndexedDB, keyed by tool and user. Items delete on successful upload, the whole
+queue clears on sign-out, unsent items expire after 72 hours with a warning in
+the last 12, and retries happen on app open and on the `online` event. **No
+Background Sync** — Safari does not implement it, and a phone is the device
+this matters on.
+
+The pitch language that goes with this is "never stored on our servers", not
+"never stored": a queued photo does briefly live on the device.
+
+### Install
+
+Android and desktop Chrome/Edge get an "Install app" button wired to the
+browser's own prompt. iOS Safari has no prompt to surface, so it gets a short
+Add to Home Screen guide on first visit, dismissed for good once seen. Chrome
+and Firefox on iOS are excluded by user agent: they use the same engine but
+cannot add to the home screen, so the guide would send those users looking for
+a menu item that is not there.
+
+### What the browser test covers
+
+22 assertions in a real Chromium, including the ones worth trusting:
+
+- no Supabase response ever reaches a cache, even after a failed request
+- the offline fallback works with the server genuinely stopped, not with
+  Playwright's `setOffline` (which does not apply to fetches the service worker
+  makes, and will pass a broken implementation)
+- a failed upload keeps the item and counts the attempt
+- items past 72 hours are purged, and warn in the last 12
+- sign-out clears the queue, and the offline page comes straight back
+
 ## Design system (§6)
 
 `packages/ui` holds the tokens and the four components the shell is built

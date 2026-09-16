@@ -119,6 +119,12 @@ importers:
         specifier: workspace:*
         version: link:../db
     devDependencies:
+      '@types/react':
+        specifier: ^19.0.2
+        version: 19.3.0
+      react:
+        specifier: ^19.0.0
+        version: 19.3.0
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
