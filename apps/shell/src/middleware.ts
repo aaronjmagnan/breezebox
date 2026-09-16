@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { refreshSession } from '@breezebox/auth/server';
 import { resolveDistrict } from '@/lib/district/branding';
 import {
   DISTRICT_HEADER,
@@ -56,5 +57,13 @@ export async function middleware(request: NextRequest) {
 
   requestHeaders.set(DISTRICT_HEADER, encodeDistrictHeader(district));
 
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+
+  // Rotate the Supabase session cookie onto this response. Middleware is the
+  // only place cookies can actually be set on every request, so without this a
+  // long-lived tab's token expires and every server component starts seeing a
+  // signed-out user (§5).
+  await refreshSession(request, response);
+
+  return response;
 }

@@ -94,6 +94,98 @@ seeded with `slug = 'demo'`. Bare `localhost:3000` resolves to nothing unless
 you set `NEXT_PUBLIC_DEFAULT_DISTRICT_SLUG`, which is also what makes Vercel
 preview URLs usable.
 
+## Auth setup (§5)
+
+Sign-in is Google and Microsoft OAuth through Supabase Auth. All of it lives in
+`packages/auth`; the shell and every tool import from there and never
+reimplement login.
+
+### The redirect chain
+
+The providers only ever know **one** redirect URI: Supabase's own callback.
+Supabase then returns the user to the district origin they started on.
+
+```
+demo.breezebox.com/sign-in
+  → accounts.google.com  (redirect_uri = <project>.supabase.co/auth/v1/callback)
+    → <project>.supabase.co/auth/v1/callback
+      → demo.breezebox.com/auth/callback?code=...
+```
+
+That last hop is the one Supabase has to be told about.
+
+### What to add in the Supabase dashboard
+
+**Authentication → Providers**: enable Google and Azure (Microsoft).
+
+In the **Google Cloud console**, the only authorized redirect URI you need is:
+
+```
+https://<project-ref>.supabase.co/auth/v1/callback
+```
+
+Same single URI in the **Azure app registration**. Note that with the default
+`common` tenant, *any* Microsoft account can authenticate — which is exactly
+why the `sso_domain` check exists and why it is enforced in the database.
+
+**Authentication → URL Configuration → Site URL**:
+
+```
+https://breezebox.com
+```
+
+**Authentication → URL Configuration → Redirect URLs** — add all of these:
+
+```
+https://breezebox.com/**
+https://*.breezebox.com/**
+http://localhost:3000/**
+http://*.localhost:3000/**
+```
+
+Plus one line per custom district domain:
+
+```
+https://leaders.sampleusd.org/**
+```
+
+And, if you deploy previews, your Vercel preview pattern:
+
+```
+https://*-<your-team>.vercel.app/**
+```
+
+Three things worth knowing about that list:
+
+- `*` matches a single hostname label, `**` matches any path. So
+  `https://*.breezebox.com/**` covers `demo.breezebox.com` but **not**
+  `a.b.breezebox.com` — the same one-label limit as the wildcard certificate.
+- Custom domains are not covered by the wildcard. Every district that maps its
+  own domain needs its own line here, or sign-in breaks for that district only,
+  after everything else about it already works.
+- `http://*.localhost:3000/**` is what makes `demo.localhost:3000` work in
+  development. Without it, local sign-in fails at the last hop.
+
+### What happens after the callback
+
+`/auth/callback` exchanges the code for a session, then calls
+`claim_staff_membership(district_id)`. That function re-checks the email domain
+against `districts.sso_domain` **in the database** and, on a first valid login,
+creates the staff row with `created_via = 'sso_first_login'`.
+
+If the domain does not match, the session is dropped immediately and the user
+lands on `/auth/denied` with a message naming the domain they should be using.
+The app-layer check is not the boundary: a user who somehow got past it still
+resolves to no district, so RLS shows them nothing.
+
+### Inactivity sign-out (§11)
+
+`useInactivitySignOut` signs the user out after
+`districts.inactivity_timeout_minutes` (default 30). Last-activity is shared
+across tabs through `localStorage`, it polls coarsely rather than resetting a
+timer on every pointer event, and it re-checks on `visibilitychange` so a phone
+that slept past the timeout signs out as soon as the app comes back.
+
 ## Deploying: one Vercel project per app
 
 | App | Vercel project | Domains |
