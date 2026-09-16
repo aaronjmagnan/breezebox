@@ -21,36 +21,59 @@ user back to the district origin, which is configured separately in step 3.
 
 ## 1. Google
 
-**Google Cloud console → APIs & Services**
+Google renamed all of this. What older guides (including an earlier version of
+this file) call the **OAuth consent screen**, under *APIs & Services*, is now
+**Google Auth Platform**, split across several pages.
 
-1. Create or pick a project.
-2. **OAuth consent screen**:
-   - **External** unless every user will be in your own Google Workspace. If
-     you pick Internal, only accounts in *your* Workspace can ever sign in,
-     which is wrong for a product that serves other districts.
-   - App name, user support email, developer contact.
-   - Scopes: `openid`, `.../auth/userinfo.email`, `.../auth/userinfo.profile`.
-3. **Credentials → Create credentials → OAuth client ID**:
-   - Application type: **Web application**
-   - Authorized redirect URIs: `https://<project-ref>.supabase.co/auth/v1/callback`
-   - Authorized JavaScript origins: leave empty. Supabase handles the exchange;
-     the browser never talks to Google directly from your domain.
-4. Copy the **Client ID** and **Client secret**.
+Start here, with your project selected:
+
+**https://console.cloud.google.com/auth/overview**
+
+If the project has never been configured, that page runs a *Get started* flow
+asking for app name, support email, audience and contact details. Complete it
+and the rest of the navigation unlocks.
+
+Then, page by page:
+
+| Page | Direct link | What to do |
+| --- | --- | --- |
+| **Branding** | [/auth/branding](https://console.cloud.google.com/auth/branding) | App name, user support email, developer contact |
+| **Audience** | [/auth/audience](https://console.cloud.google.com/auth/audience) | Choose **External**; see the trap below |
+| **Data Access** | [/auth/scopes](https://console.cloud.google.com/auth/scopes) | Add `openid`, `.../auth/userinfo.email`, `.../auth/userinfo.profile` |
+| **Clients** | [/auth/clients](https://console.cloud.google.com/auth/clients) | Create the OAuth client |
+
+Choose **External** on Audience unless every user will be in your own Google
+Workspace. Internal means only accounts in *your* Workspace can ever sign in,
+which is wrong for a product serving other districts.
+
+On **Clients → Create client**:
+
+- Application type: **Web application**
+- Authorized redirect URIs: `https://<project-ref>.supabase.co/auth/v1/callback`
+- Authorized JavaScript origins: leave empty. Supabase handles the exchange;
+  the browser never talks to Google directly from your domain.
+
+Copy the **Client ID** and **Client secret**.
 
 **Supabase dashboard → Authentication → Providers → Google**: enable, paste
 both, save.
 
+> **If you are hunting for "Credentials"**: *APIs & Services → Credentials*
+> still exists, but it is now only for API keys and service accounts. OAuth
+> client IDs moved to **Clients** under Google Auth Platform. This is the step
+> most likely to have you going in circles.
+
 ### The Google trap
 
-A new External consent screen starts in **Testing**, which means:
+A new External app starts in **Testing**, which means:
 
-- only accounts you add under **Test users** can sign in, up to 100
+- only accounts listed under **Test users** can sign in, up to 100
 - refresh tokens expire after **7 days**, so people get silently signed out
 
 Fine while you are the only user. Before a district touches it, hit **Publish
-app** on the consent screen. Publishing is instant unless you request sensitive
-scopes, and the three above are not sensitive, so there is no verification
-review to wait on.
+app** on the **Audience** page. Publishing is instant unless you request
+sensitive scopes, and the three above are not sensitive, so there is no
+verification review to wait on.
 
 ---
 
@@ -191,6 +214,7 @@ Work up, not down. Each step rules out everything below it.
 | What you see | Almost always |
 | --- | --- |
 | `redirect_uri_mismatch` from Google | The provider has your district domain instead of the Supabase callback URL |
+| Cannot find the OAuth consent screen at all | Google renamed it. It is **Google Auth Platform** now: console.cloud.google.com/auth/overview |
 | Supabase says "requested path is invalid" | The district origin is missing from the Redirect URLs list in step 3 |
 | Signed in, then bounced to `/auth/denied` | Working as designed: your email domain does not match `sso_domain` |
 | "Sign-in is not switched on yet" | `sso_domain` is null on that district |
