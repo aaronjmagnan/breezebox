@@ -17,6 +17,8 @@
     "push": "supabase db push --workdir .",
     "bundle": "node scripts/bundle-migrations.mjs",
     "test": "psql \"$(supabase status --workdir . -o env | grep DB_URL | cut -d= -f2- | tr -d '\"')\" -v ON_ERROR_STOP=1 -f supabase/tests/rls_isolation.sql",
+    "test:lcc": "psql \"$(supabase status --workdir . -o env | grep DB_URL | cut -d= -f2- | tr -d '\"')\" -v ON_ERROR_STOP=1 -f supabase/tests/learning_cycles_rls.sql",
+    "test:all": "pnpm test && pnpm test:lcc",
     "types": "supabase gen types typescript --workdir . --local --schema public > src/types.ts",
     "types:remote": "supabase gen types typescript --workdir . --project-id \"$SUPABASE_PROJECT_ID\" --schema public > src/types.ts",
     "typecheck": "tsc --noEmit"
