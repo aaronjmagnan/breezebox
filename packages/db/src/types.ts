@@ -34,6 +34,7 @@ export type Database = {
           free_period_end_date: string | null;
           status: Database['public']['Enums']['district_status'];
           inactivity_timeout_minutes: number;
+          demo_mode: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -50,6 +51,7 @@ export type Database = {
           free_period_end_date?: string | null;
           status?: Database['public']['Enums']['district_status'];
           inactivity_timeout_minutes?: number;
+          demo_mode?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -66,6 +68,7 @@ export type Database = {
           free_period_end_date?: string | null;
           status?: Database['public']['Enums']['district_status'];
           inactivity_timeout_minutes?: number;
+          demo_mode?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -339,6 +342,7 @@ export type Database = {
           theme_color: string;
           sso_domain: string | null;
           status: Database['public']['Enums']['district_status'];
+          demo_mode: boolean;
         }[];
       };
       claim_staff_membership: {

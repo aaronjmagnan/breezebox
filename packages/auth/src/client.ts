@@ -4,6 +4,7 @@
 
 export { browserClient } from './clients/browser';
 export { signInWithProvider } from './sign-in';
+export { signInWithPassword, type PasswordSignInResult } from './password';
 export { signOut, onSignOut, type SignOutReason, type SignOutCleanup } from './sign-out';
 export {
   useInactivitySignOut,

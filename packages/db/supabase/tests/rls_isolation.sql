@@ -153,12 +153,20 @@ begin
   -- render before anyone signs in (§8).
   perform pg_temp.assert_eq('anon resolves branding by subdomain',
     (select count(*) from public.get_district_branding('rls-alpha.localhost:3000')), 1);
-  -- 1 IN parameter (host) + the 7 declared OUT columns. If anyone widens the
-  -- function to return the whole districts row, this fails.
-  perform pg_temp.assert_eq('branding exposes exactly seven public fields',
+  -- 1 IN parameter (host) + the declared OUT columns. If anyone widens the
+  -- function to return the whole districts row, this fails. Contract dates
+  -- and the inactivity timeout must never appear here.
+  perform pg_temp.assert_eq('branding exposes exactly eight public fields',
     (select cardinality(p.proargnames) from pg_proc p
      join pg_namespace n on n.oid = p.pronamespace
-     where n.nspname = 'public' and p.proname = 'get_district_branding'), 8);
+     where n.nspname = 'public' and p.proname = 'get_district_branding'), 9);
+  perform pg_temp.assert_eq('branding leaks no contract or billing fields',
+    (select count(*) from pg_proc p
+     join pg_namespace n on n.oid = p.pronamespace
+     cross join unnest(p.proargnames) as arg
+     where n.nspname = 'public' and p.proname = 'get_district_branding'
+       and arg in ('contract_start_date', 'free_period_end_date',
+                   'inactivity_timeout_minutes', 'custom_domain')), 0);
   perform pg_temp.assert_eq('unknown hostname resolves to nothing',
     (select count(*) from public.get_district_branding('nope.localhost:3000')), 0);
   perform pg_temp.assert_eq('reserved hostname resolves to nothing',
@@ -291,6 +299,9 @@ begin
     'update public.districts set status = ''paid'' where id = app.current_district_id()');
   perform pg_temp.assert_denied('district admin cannot change their sso_domain',
     'update public.districts set sso_domain = ''gmail.com''
+       where id = app.current_district_id()');
+  perform pg_temp.assert_denied('district admin cannot switch on demo mode',
+    'update public.districts set demo_mode = true
        where id = app.current_district_id()');
 end;
 $$;

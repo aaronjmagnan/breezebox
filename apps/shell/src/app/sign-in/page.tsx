@@ -4,6 +4,7 @@ import { deniedMessage, isAuthDeniedReason, safeNextPath } from '@breezebox/auth
 import { getSessionContext } from '@breezebox/auth/server';
 import { requireDistrict } from '@/lib/district/server';
 import { SignInButtons } from './sign-in-buttons';
+import { DemoSignIn } from './demo-sign-in';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,6 +58,20 @@ export default async function SignInPage({
         ) : null}
 
         <SignInButtons next={next} />
+
+        {/*
+          Only ever rendered for a district the super-admin panel has flagged
+          demo_mode. A real district never sees this, and the sign-in itself
+          re-checks the flag before it will leave a session in place.
+        */}
+        {district.demo_mode ? (
+          <DemoSignIn
+            districtId={district.id}
+            districtName={district.name}
+            ssoDomain={district.sso_domain}
+            next={next}
+          />
+        ) : null}
 
         {district.sso_domain ? (
           <p className="mt-6 text-sm leading-relaxed text-bb-muted">
