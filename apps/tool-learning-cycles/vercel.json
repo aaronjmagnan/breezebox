@@ -4,5 +4,12 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build",
   "ignoreCommand": "npx --yes turbo-ignore @breezebox/tool-learning-cycles",
-  "github": { "silent": true }
+  "github": { "silent": true },
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/learning-cycles",
+      "permanent": false
+    }
+  ]
 }

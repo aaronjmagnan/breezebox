@@ -7,6 +7,23 @@ Slug `learning-cycles`, `basePath: '/learning-cycles'`, served under the
 district origin by the shell's multi-zone rewrite. **`offline: "none"`** — this
 app registers no service worker. The shell owns the only one (§11).
 
+## Which URL
+
+```
+https://{district}/learning-cycles                  ← what people use
+https://{tool-deployment}/learning-cycles           ← the tool's own root
+https://{tool-deployment}/                          ← redirects to the above
+```
+
+Because of `basePath`, this app has **no route at `/`**. Its own deployment URL
+404s at the root, which reads like a failed deploy and is not. `vercel.json`
+redirects `/` to `/learning-cycles` so that dead end stops costing anyone ten
+minutes.
+
+Nobody should be visiting the tool's deployment directly in normal use. It has
+no domain, and the shell proxies to it so the session cookie stays on the
+district origin.
+
 ## Schema
 
 One table, `public.learning_cycle_checkins`, in the shared Supabase project.
