@@ -29,6 +29,7 @@ export type Staff = Tables<'staff'>;
 export type ToolInstance = Tables<'tool_instances'>;
 export type SupportTicket = Tables<'support_tickets'>;
 export type AccessLogEntry = Tables<'access_log'>;
+export type LearningCycleCheckIn = Tables<'learning_cycle_checkins'>;
 
 // --- Enum aliases -----------------------------------------------------------
 

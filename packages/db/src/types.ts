@@ -126,6 +126,7 @@ export type Database = {
           role: Database['public']['Enums']['staff_role'];
           status: Database['public']['Enums']['staff_status'];
           created_via: Database['public']['Enums']['staff_created_via'];
+          district_wide: boolean;
           last_seen_at: string | null;
           created_at: string;
           updated_at: string;
@@ -140,6 +141,7 @@ export type Database = {
           role?: Database['public']['Enums']['staff_role'];
           status?: Database['public']['Enums']['staff_status'];
           created_via?: Database['public']['Enums']['staff_created_via'];
+          district_wide?: boolean;
           last_seen_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -154,6 +156,7 @@ export type Database = {
           role?: Database['public']['Enums']['staff_role'];
           status?: Database['public']['Enums']['staff_status'];
           created_via?: Database['public']['Enums']['staff_created_via'];
+          district_wide?: boolean;
           last_seen_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -285,6 +288,134 @@ export type Database = {
           {
             foreignKeyName: 'support_tickets_staff_id_fkey';
             columns: ['staff_id'];
+            isOneToOne: false;
+            referencedRelation: 'staff';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      learning_cycle_checkins: {
+        Row: {
+          id: string;
+          district_id: string;
+          site_id: string;
+          principal_staff_id: string | null;
+          created_by: string;
+          template_version: string;
+          entry_method: string;
+          checkin_date: string;
+          cycle_number: number | null;
+          stage: string | null;
+          practice: string | null;
+          student_need: string | null;
+          step_pick_level: string | null;
+          step_learn_level: string | null;
+          step_try_level: string | null;
+          step_see_level: string | null;
+          step_check_level: string | null;
+          step_pick_note: string | null;
+          step_learn_note: string | null;
+          step_try_note: string | null;
+          step_see_note: string | null;
+          step_check_note: string | null;
+          working: string | null;
+          barrier: string | null;
+          next_step: string | null;
+          district_support: string | null;
+          next_checkin_date: string | null;
+          submitted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          district_id: string;
+          site_id: string;
+          principal_staff_id?: string | null;
+          created_by: string;
+          template_version?: string;
+          entry_method?: string;
+          checkin_date: string;
+          cycle_number?: number | null;
+          stage?: string | null;
+          practice?: string | null;
+          student_need?: string | null;
+          step_pick_level?: string | null;
+          step_learn_level?: string | null;
+          step_try_level?: string | null;
+          step_see_level?: string | null;
+          step_check_level?: string | null;
+          step_pick_note?: string | null;
+          step_learn_note?: string | null;
+          step_try_note?: string | null;
+          step_see_note?: string | null;
+          step_check_note?: string | null;
+          working?: string | null;
+          barrier?: string | null;
+          next_step?: string | null;
+          district_support?: string | null;
+          next_checkin_date?: string | null;
+          submitted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          district_id?: string;
+          site_id?: string;
+          principal_staff_id?: string | null;
+          created_by?: string;
+          template_version?: string;
+          entry_method?: string;
+          checkin_date?: string;
+          cycle_number?: number | null;
+          stage?: string | null;
+          practice?: string | null;
+          student_need?: string | null;
+          step_pick_level?: string | null;
+          step_learn_level?: string | null;
+          step_try_level?: string | null;
+          step_see_level?: string | null;
+          step_check_level?: string | null;
+          step_pick_note?: string | null;
+          step_learn_note?: string | null;
+          step_try_note?: string | null;
+          step_see_note?: string | null;
+          step_check_note?: string | null;
+          working?: string | null;
+          barrier?: string | null;
+          next_step?: string | null;
+          district_support?: string | null;
+          next_checkin_date?: string | null;
+          submitted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'learning_cycle_checkins_district_id_fkey';
+            columns: ['district_id'];
+            isOneToOne: false;
+            referencedRelation: 'districts';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'learning_cycle_checkins_site_id_fkey';
+            columns: ['site_id'];
+            isOneToOne: false;
+            referencedRelation: 'sites';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'learning_cycle_checkins_principal_staff_id_fkey';
+            columns: ['principal_staff_id'];
+            isOneToOne: false;
+            referencedRelation: 'staff';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'learning_cycle_checkins_created_by_fkey';
+            columns: ['created_by'];
             isOneToOne: false;
             referencedRelation: 'staff';
             referencedColumns: ['id'];

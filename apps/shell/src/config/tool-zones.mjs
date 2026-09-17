@@ -6,15 +6,19 @@
  * its deployment. Adding a tool is a one-entry change here plus a
  * `tool_instances` row for each district that gets it.
  *
- * No tools are registered yet, so this list is empty on purpose.
- *
  * @typedef {object} ToolZone
  * @property {string} slug    path segment and the tool's own basePath
  * @property {string} envVar  env var holding the deployment origin
  */
 
 /** @type {ToolZone[]} */
-export const TOOL_ZONES = [];
+export const TOOL_ZONES = [
+  {
+    // Learning Cycle Check-In. Data tool (§7), offline "none" (§11).
+    slug: 'learning-cycles',
+    envVar: 'TOOL_LEARNING_CYCLES_ORIGIN',
+  },
+];
 
 /**
  * Turn the registry into Next rewrites. A zone with no origin configured is

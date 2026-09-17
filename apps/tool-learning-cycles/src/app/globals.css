@@ -1,0 +1,57 @@
+@import '@breezebox/ui/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-bb-bg font-sans text-bb-text antialiased;
+  }
+}
+
+/*
+ * Print: the check-in detail laid out like the paper organizer (§4 of the
+ * tool spec). Letter size, no app chrome, no link URLs bleeding into the
+ * margins. Browser print dialog only; nothing is generated server-side.
+ */
+@media print {
+  @page {
+    size: letter;
+    margin: 0.6in;
+  }
+
+  .print-hide {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .print-sheet {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .print-box {
+    border: 1px solid #999 !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  h1, h2, h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  a[href]::after {
+    content: '';
+  }
+}

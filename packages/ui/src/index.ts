@@ -20,3 +20,10 @@ export { Card, type CardProps } from './card';
 export { Tile, type TileProps } from './tile';
 export { AppHeader, type AppHeaderProps } from './app-header';
 export { Icon, ICON_NAMES, isIconName, type IconName } from './icon';
+export { Field, TextInput, Select, Textarea, type FieldProps } from './field';
+export {
+  ChoiceGroup,
+  type ChoiceGroupProps,
+  type ChoiceOption,
+} from './choice';
+export { Table, type TableProps, type TableColumn } from './table';
