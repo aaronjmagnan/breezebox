@@ -1,5 +1,6 @@
 import { Button } from '@breezebox/ui';
 import { requireToolSession, hasNoReach } from '@/lib/session';
+import { appHref } from '@/lib/routes';
 import { CheckInForm } from '@/components/checkin-form';
 import { NoReach } from '@/components/no-reach';
 
@@ -16,7 +17,7 @@ export default async function NewCheckInPage() {
     <main className="mx-auto w-full max-w-2xl px-4 py-6">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">New check-in</h1>
-        <Button variant="ghost" href="/learning-cycles">
+        <Button variant="ghost" href={appHref('/')}>
           Cancel
         </Button>
       </div>

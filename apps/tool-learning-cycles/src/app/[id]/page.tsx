@@ -3,6 +3,7 @@ import { Button } from '@breezebox/ui';
 import { requireToolSession } from '@/lib/session';
 import { getCheckIn } from '@/lib/checkins';
 import { formatCycle, formatDate, formatLevel, formatStage } from '@/lib/format';
+import { appHref, isUuid } from '@/lib/routes';
 import {
   CONVERSATION_BOXES,
   LEVELS,
@@ -59,6 +60,10 @@ export default async function CheckInDetailPage({
   await requireToolSession();
   const { id } = await params;
 
+  // A path that is not an id at all reaches here as one, and Postgres
+  // answers a non-uuid with an error rather than an empty result.
+  if (!isUuid(id)) notFound();
+
   // RLS decides this, not the app: an out-of-reach record simply is not found.
   const record = await getCheckIn(id);
   if (!record) notFound();
@@ -70,11 +75,11 @@ export default async function CheckInDetailPage({
       <div className="print-hide flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Learning Cycle Check-In</h1>
         <div className="flex flex-wrap gap-2">
-          <Button variant="ghost" href="/learning-cycles">
+          <Button variant="ghost" href={appHref('/')}>
             Back
           </Button>
           <PrintButton />
-          <Button variant="primary" href={`/learning-cycles/${record.id}/edit`}>
+          <Button variant="primary" href={appHref(`/${record.id}/edit`)}>
             Edit
           </Button>
         </div>

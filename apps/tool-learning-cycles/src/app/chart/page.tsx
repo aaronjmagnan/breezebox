@@ -3,6 +3,7 @@ import { Button, Card } from '@breezebox/ui';
 import { requireToolSession, hasNoReach } from '@/lib/session';
 import { latestPerSiteForCycle } from '@/lib/checkins';
 import { CYCLES, LEVELS, LEVEL_LABELS, STEPS, isLevel } from '@/lib/template';
+import { appHref } from '@/lib/routes';
 import { NoReach } from '@/components/no-reach';
 
 export const dynamic = 'force-dynamic';
@@ -63,7 +64,7 @@ export default async function ChartPage({
     <main className="mx-auto w-full max-w-4xl px-4 py-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Where schools are in cycle {cycle}</h1>
-        <Button variant="ghost" href="/learning-cycles">
+        <Button variant="ghost" href={appHref('/')}>
           Back to check-ins
         </Button>
       </div>
@@ -78,7 +79,7 @@ export default async function ChartPage({
             {CYCLES.map((n) => (
               <Link
                 key={n}
-                href={`/learning-cycles/chart?cycle=${n}`}
+                href={`/chart?cycle=${n}`}
                 aria-current={n === cycle ? 'page' : undefined}
                 className={
                   'inline-flex min-h-tap items-center rounded-bb border px-4 text-base no-underline ' +

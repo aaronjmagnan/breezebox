@@ -4,6 +4,7 @@ import { Button, Card, Table, type TableColumn } from '@breezebox/ui';
 import { requireToolSession, hasNoReach } from '@/lib/session';
 import { listOwnDrafts, listSubmitted, type CheckInWithNames } from '@/lib/checkins';
 import { formatCycle, formatDate, formatStage } from '@/lib/format';
+import { appHref } from '@/lib/routes';
 import { Filters } from '@/components/filters';
 import { NoReach } from '@/components/no-reach';
 
@@ -89,10 +90,10 @@ export default async function CheckInsPage({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Learning Cycle Check-In</h1>
         <div className="flex gap-2">
-          <Button variant="secondary" href="/learning-cycles/chart">
+          <Button variant="secondary" href={appHref('/chart')}>
             Chart
           </Button>
-          <Button variant="primary" href="/learning-cycles/new">
+          <Button variant="primary" href={appHref('/new')}>
             New check-in
           </Button>
         </div>
@@ -119,7 +120,7 @@ export default async function CheckInsPage({
                         Started {formatDate(draft.checkin_date)}
                       </p>
                     </div>
-                    <Button variant="secondary" href={`/learning-cycles/${draft.id}/edit`}>
+                    <Button variant="secondary" href={appHref(`/${draft.id}/edit`)}>
                       Continue
                     </Button>
                   </div>

@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Field, Select, TextInput } from '@breezebox/ui';
 import { CYCLES, STAGES, STAGE_LABELS } from '@/lib/template';
+import { appHref } from '@/lib/routes';
 
 /**
  * List filters (§7).
@@ -80,7 +81,7 @@ export function Filters({ sites }: { sites: Array<{ id: string; name: string }> 
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" href={`/learning-cycles/api/export?${params.toString()}`}>
+        <Button variant="secondary" href={appHref(`/api/export?${params.toString()}`)}>
           Export CSV
         </Button>
         {hasFilters ? (

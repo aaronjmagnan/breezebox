@@ -3,6 +3,7 @@ import { Button } from '@breezebox/ui';
 import { requireToolSession } from '@/lib/session';
 import { getCheckIn, listStaffAtSite } from '@/lib/checkins';
 import { valuesFromRecord } from '@/lib/form-state';
+import { appHref, isUuid } from '@/lib/routes';
 import { CheckInForm } from '@/components/checkin-form';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,10 @@ export default async function EditCheckInPage({
   const session = await requireToolSession();
   const { id } = await params;
 
+  // A path that is not an id at all reaches here as one, and Postgres
+  // answers a non-uuid with an error rather than an empty result.
+  if (!isUuid(id)) notFound();
+
   const record = await getCheckIn(id);
   if (!record) notFound();
 
@@ -34,7 +39,7 @@ export default async function EditCheckInPage({
         <h1 className="text-xl font-semibold">
           {isDraft ? 'Continue check-in' : 'Edit check-in'}
         </h1>
-        <Button variant="ghost" href={`/learning-cycles/${record.id}`}>
+        <Button variant="ghost" href={appHref(`/${record.id}`)}>
           Cancel
         </Button>
       </div>
