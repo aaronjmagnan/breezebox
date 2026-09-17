@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database, DistrictBranding } from '@breezebox/db';
+import { supabaseEnvOrNull } from '@breezebox/auth/env';
 
 /**
  * Resolve a hostname to a district's public branding (§8).
@@ -54,11 +55,13 @@ let client: ReturnType<typeof createClient<Database>> | null = null;
 function getClient() {
   if (client) return client;
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
+  // Resolved by @breezebox/auth so the two accepted key names stay in one
+  // place: Supabase calls it the anon key or the publishable key depending on
+  // when the project was made.
+  const env = supabaseEnvOrNull();
+  if (!env) return null;
 
-  client = createClient<Database>(url, key, {
+  client = createClient<Database>(env.url, env.anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   return client;
@@ -68,8 +71,10 @@ async function lookup(host: string): Promise<DistrictBranding | null> {
   const supabase = getClient();
   if (!supabase) {
     console.error(
-      '[district] NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is unset; ' +
-        'every hostname will resolve to "district not found"',
+      '[district] Supabase is not configured, so every hostname will resolve to ' +
+        '"district not found". Set NEXT_PUBLIC_SUPABASE_URL and one of ' +
+        'NEXT_PUBLIC_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, ' +
+        'then REDEPLOY: these are baked in at build time.',
     );
     return null;
   }

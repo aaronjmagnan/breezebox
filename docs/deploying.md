@@ -34,7 +34,7 @@ Import the repo in Vercel, then:
 | Variable | Value | Environments |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://<project-ref>.supabase.co` | all |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | the anon / public key | all |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | the anon / publishable key | all |
 | `NEXT_PUBLIC_DEFAULT_DISTRICT_SLUG` | `demo` | **preview + development only** |
 
 The anon key is safe in the browser; RLS is the boundary. **Never** add
@@ -43,6 +43,17 @@ shell has no use for it.
 
 `VERCEL_GIT_COMMIT_SHA` is supplied automatically and becomes the service
 worker's cache version, so every deploy invalidates the old cache.
+
+#### If the app says Supabase is unset when it plainly is not
+
+Supabase has been renaming the anon key to the **publishable key**, and a newer
+dashboard hands you that name. A variable called
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` is accepted, but anything else — say
+`NEXT_PUBLIC_SUPABASE_KEY` — is invisible to the app, which then reports it as
+unset while the dashboard shows it sitting there looking correct.
+
+Check the name character for character before anything else. The runtime log
+line names both accepted spellings.
 
 #### The one to be careful with
 
