@@ -347,6 +347,12 @@ across tabs through `localStorage`, it polls coarsely rather than resetting a
 timer on every pointer event, and it re-checks on `visibilitychange` so a phone
 that slept past the timeout signs out as soon as the app comes back.
 
+## Deploying
+
+One Vercel project per deployable app, all from this one repo, each with a
+different Root Directory. Full steps, including the custom-domain and DNS
+move: **[docs/deploying.md](docs/deploying.md)**.
+
 ## Deploying: one Vercel project per app
 
 | App | Vercel project | Domains |

@@ -104,6 +104,19 @@ export async function resolveDistrict(rawHost: string): Promise<DistrictBranding
   const fallbackSlug = process.env.NEXT_PUBLIC_DEFAULT_DISTRICT_SLUG;
   if (!district && fallbackSlug) {
     district = await lookup(`${fallbackSlug}.localhost`);
+
+    if (district && process.env.NODE_ENV === 'production') {
+      // Loud on purpose. Once a wildcard domain is live this variable is a
+      // hazard: a typo'd or retired subdomain would quietly serve the fallback
+      // district instead of "district not found". It is meant for preview
+      // URLs and bare localhost only, and should be unset in production the
+      // day real district hostnames start resolving.
+      console.warn(
+        `[district] "${host}" resolved to no district; falling back to ` +
+          `NEXT_PUBLIC_DEFAULT_DISTRICT_SLUG="${fallbackSlug}". Unset this in ` +
+          `production once district hostnames resolve on their own.`,
+      );
+    }
   }
 
   writeCache(host, district);
