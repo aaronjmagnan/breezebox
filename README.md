@@ -441,7 +441,7 @@ See `.env.example` for the annotated list. The ones that matter:
 | `NEXT_PUBLIC_SUPABASE_URL` | shell | From `pnpm db:start` locally |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | shell | Safe in the browser; RLS is the boundary |
 | `SUPABASE_SERVICE_ROLE_KEY` | server only | **Bypasses RLS.** Never `NEXT_PUBLIC_`, never in the shell |
-| `NEXT_PUBLIC_ROOT_DOMAIN` | shell | Apex to strip when extracting a district slug |
+| `NEXT_PUBLIC_DEFAULT_DISTRICT_SLUG` | shell | District for hostnames carrying no slug (bare localhost, preview URLs). **Remove from production** once a wildcard domain resolves |
 | `SUPABASE_PROJECT_ID` | CLI only | For `db:push` and `types:remote` |
 
 ## Adding a district
