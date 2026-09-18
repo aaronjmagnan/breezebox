@@ -105,7 +105,7 @@ export default async function CheckInsPage({
       header: 'Stage',
       sortKey: 'stage',
       hideBelow: 'sm',
-      cell: (row) => formatStage(row.stage),
+      cell: (row) => formatStage(row.stage, session.template.stageLabels),
     },
     {
       key: 'practice',
@@ -181,7 +181,7 @@ export default async function CheckInsPage({
 
         <div className="mt-4">
           <Suspense fallback={null}>
-            <Filters sites={session.sites} />
+            <Filters sites={session.sites} stageLabels={session.template.stageLabels} />
           </Suspense>
         </div>
 

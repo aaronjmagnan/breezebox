@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCheckIn } from '@/lib/checkins';
 import { checkInToDocx, docxFilename } from '@/lib/docx';
 import { isUuid } from '@/lib/routes';
+import { requireToolSession } from '@/lib/session';
 
 /**
  * One check-in as a Word document.
@@ -22,10 +23,14 @@ export async function GET(
   const { id } = await params;
   if (!isUuid(id)) return new NextResponse('Not found', { status: 404 });
 
+  // The session carries this district's own wording, so the document reads
+  // the same as the screen it was downloaded from.
+  const session = await requireToolSession();
+
   const record = await getCheckIn(id);
   if (!record) return new NextResponse('Not found', { status: 404 });
 
-  const buffer = await checkInToDocx(record);
+  const buffer = await checkInToDocx(record, session.template);
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {

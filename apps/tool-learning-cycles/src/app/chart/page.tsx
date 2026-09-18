@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Button, Card } from '@breezebox/ui';
 import { requireToolSession, hasNoReach } from '@/lib/session';
 import { latestPerSiteForCycle } from '@/lib/checkins';
-import { CYCLES, LEVELS, LEVEL_LABELS, STEPS, isLevel } from '@/lib/template';
+import { CYCLES, LEVELS, isLevel } from '@/lib/template';
 import { appHref } from '@/lib/routes';
 import { NoReach } from '@/components/no-reach';
 
@@ -37,6 +37,7 @@ export default async function ChartPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const session = await requireToolSession();
+  const { template } = session;
   const params = await searchParams;
 
   const requested = Number.parseInt(
@@ -50,7 +51,7 @@ export default async function ChartPage({
   const bars = rows.map((row) => {
     const counts: Record<string, number> = { not_yet: 0, happening: 0, routine: 0 };
     let answered = 0;
-    for (const step of STEPS) {
+    for (const step of template.steps) {
       const level = row[step.levelColumn] as string | null;
       if (isLevel(level)) {
         counts[level] = (counts[level] ?? 0) + 1;
@@ -94,7 +95,7 @@ export default async function ChartPage({
           </nav>
 
           <p className="mt-4 text-sm leading-relaxed text-bb-muted">
-            Each bar is one school&rsquo;s five steps, from its most recent
+            Each bar is one school&rsquo;s {template.steps.length} steps, from its most recent
             submitted check-in for this cycle.
           </p>
 
@@ -104,7 +105,7 @@ export default async function ChartPage({
                 <span
                   className={`inline-block h-3 w-3 rounded-sm border border-bb-border ${SEGMENT[level]}`}
                 />
-                {LEVEL_LABELS[level]}
+                {template.levelLabels[level]}
               </li>
             ))}
           </ul>
@@ -128,7 +129,7 @@ export default async function ChartPage({
                       {row.site?.name ?? 'Unknown school'}
                     </h2>
                     <p className="text-sm text-bb-muted">
-                      {answered} of {STEPS.length} steps answered
+                      {answered} of {template.steps.length} steps answered
                     </p>
                   </div>
 
@@ -147,7 +148,7 @@ export default async function ChartPage({
                         <span
                           key={level}
                           className={SEGMENT[level]}
-                          style={{ width: `${(counts[level]! / STEPS.length) * 100}%` }}
+                          style={{ width: `${(counts[level]! / template.steps.length) * 100}%` }}
                         />
                       ) : null,
                     )}
@@ -156,7 +157,7 @@ export default async function ChartPage({
                   <dl className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm">
                     {LEVELS.map((level) => (
                       <div key={level} className="flex gap-1">
-                        <dt className="text-bb-muted">{LEVEL_LABELS[level]}:</dt>
+                        <dt className="text-bb-muted">{template.levelLabels[level]}:</dt>
                         <dd className="font-semibold">{counts[level] ?? 0}</dd>
                       </div>
                     ))}

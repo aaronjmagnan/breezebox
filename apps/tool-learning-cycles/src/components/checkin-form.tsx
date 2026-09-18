@@ -14,14 +14,10 @@ import {
 import {
   CYCLES,
   LEVELS,
-  LEVEL_LABELS,
-  LEVEL_MEANINGS,
-  SECTIONS,
   STAGES,
-  STAGE_LABELS,
-  STEPS,
   type Level,
   type Stage,
+  type Template,
 } from '@/lib/template';
 import {
   emptyValues,
@@ -64,6 +60,8 @@ export type CheckInFormProps = {
   /** Site-bound users cannot change school. */
   canChooseSite: boolean;
   initialStaff?: Array<{ id: string; name: string }>;
+  /** The district's own wording. Every visible string comes from here. */
+  template: Template;
 };
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
@@ -75,6 +73,7 @@ export function CheckInForm({
   sites,
   canChooseSite,
   initialStaff = [],
+  template,
 }: CheckInFormProps) {
   const router = useRouter();
 
@@ -200,7 +199,7 @@ export function CheckInForm({
       {/* 1. The basics */}
       <Card as="section" aria-labelledby="sec-basics">
         <h2 id="sec-basics" className="text-base font-semibold">
-          {SECTIONS.basics.number}. {SECTIONS.basics.title}
+          {template.sections.basics.number}. {template.sections.basics.title}
         </h2>
 
         <div className="mt-4 flex flex-col gap-4">
@@ -276,7 +275,7 @@ export function CheckInForm({
       {/* 2. The focus */}
       <Card as="section" aria-labelledby="sec-focus">
         <h2 id="sec-focus" className="text-base font-semibold">
-          {SECTIONS.focus.number}. {SECTIONS.focus.title}
+          {template.sections.focus.number}. {template.sections.focus.title}
         </h2>
 
         <div className="mt-4 flex flex-col gap-4">
@@ -305,7 +304,7 @@ export function CheckInForm({
       {/* 3. The cycle */}
       <Card as="section" aria-labelledby="sec-cycle">
         <h2 id="sec-cycle" className="text-base font-semibold">
-          {SECTIONS.cycle.number}. {SECTIONS.cycle.title}
+          {template.sections.cycle.number}. {template.sections.cycle.title}
         </h2>
 
         <div className="mt-4 flex flex-col gap-5">
@@ -320,24 +319,26 @@ export function CheckInForm({
           <ChoiceGroup
             name="stage"
             legend="Where are they in it?"
-            options={STAGES.map((s) => ({ value: s, label: STAGE_LABELS[s] }))}
+            options={STAGES.map((s) => ({ value: s, label: template.stageLabels[s] }))}
             value={values.stage}
             onChange={(v) => update('stage', v as Stage)}
           />
 
           <div>
-            <h3 className="text-sm font-semibold">The five steps</h3>
+            <h3 className="text-sm font-semibold">
+              The {template.steps.length} steps
+            </h3>
             <dl className="mt-2 flex flex-col gap-1 text-sm leading-relaxed text-bb-muted">
               {LEVELS.map((level) => (
                 <div key={level} className="flex gap-1">
-                  <dt className="font-semibold">{LEVEL_LABELS[level]}:</dt>
-                  <dd>{LEVEL_MEANINGS[level]}</dd>
+                  <dt className="font-semibold">{template.levelLabels[level]}:</dt>
+                  <dd>{template.levelMeanings[level]}</dd>
                 </div>
               ))}
             </dl>
           </div>
 
-          {STEPS.map((step) => (
+          {template.steps.map((step) => (
             <div key={step.key} className="border-t border-bb-border pt-4">
               <h4 className="text-base font-semibold">{step.title}</h4>
               <p className="mt-0.5 text-sm leading-relaxed text-bb-muted">{step.hint}</p>
@@ -349,7 +350,7 @@ export function CheckInForm({
                 variant="segmented"
                 options={LEVELS.map((level) => ({
                   value: level,
-                  label: LEVEL_LABELS[level],
+                  label: template.levelLabels[level],
                 }))}
                 value={values.levels[step.key] ?? null}
                 onChange={(v) => setStepLevel(step.key, v as Level)}
@@ -374,7 +375,7 @@ export function CheckInForm({
       {/* 4. The conversation */}
       <Card as="section" aria-labelledby="sec-conversation">
         <h2 id="sec-conversation" className="text-base font-semibold">
-          {SECTIONS.conversation.number}. {SECTIONS.conversation.title}
+          {template.sections.conversation.number}. {template.sections.conversation.title}
         </h2>
 
         <div className="mt-4 flex flex-col gap-4">

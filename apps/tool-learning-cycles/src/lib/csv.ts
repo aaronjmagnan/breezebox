@@ -1,5 +1,5 @@
 import type { CheckInWithNames } from './checkins';
-import { STEPS } from './template';
+import type { Template } from './template';
 import { formatLevel, formatStage } from './format';
 
 /**
@@ -20,7 +20,7 @@ function cell(value: unknown): string {
   return `"${text.replace(/"/g, '""')}"`;
 }
 
-export function toCsv(rows: CheckInWithNames[]): string {
+export function toCsv(rows: CheckInWithNames[], template: Template): string {
   const headers = [
     'Date',
     'School',
@@ -29,7 +29,7 @@ export function toCsv(rows: CheckInWithNames[]): string {
     'Stage',
     'Practice',
     'Student need',
-    ...STEPS.flatMap((s) => [`${s.title} level`, `${s.title} note`]),
+    ...template.steps.flatMap((s) => [`${s.title} level`, `${s.title} note`]),
     'What is working',
     'What is getting in the way',
     'Next step',
@@ -44,11 +44,11 @@ export function toCsv(rows: CheckInWithNames[]): string {
       row.site?.name ?? '',
       row.principal?.name ?? '',
       row.cycle_number ?? '',
-      formatStage(row.stage),
+      formatStage(row.stage, template.stageLabels),
       row.practice ?? '',
       row.student_need ?? '',
-      ...STEPS.flatMap((s) => [
-        formatLevel(row[s.levelColumn] as string | null),
+      ...template.steps.flatMap((s) => [
+        formatLevel(row[s.levelColumn] as string | null, template.levelLabels),
         (row[s.noteColumn] as string | null) ?? '',
       ]),
       row.working ?? '',

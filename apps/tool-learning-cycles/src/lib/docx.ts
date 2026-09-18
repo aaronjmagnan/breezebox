@@ -11,14 +11,7 @@ import {
   WidthType,
 } from 'docx';
 import type { CheckInWithNames } from './checkins';
-import {
-  CONVERSATION_BOXES,
-  LEVELS,
-  LEVEL_LABELS,
-  LEVEL_MEANINGS,
-  SECTIONS,
-  STEPS,
-} from './template';
+import { CONVERSATION_BOXES, LEVELS, type Template } from './template';
 import { formatCycle, formatDate, formatLevel, formatStage } from './format';
 
 /**
@@ -69,7 +62,7 @@ function field(label: string, box: string, value: string) {
 }
 
 /** The five steps as a table: level and note side by side, like the paper. */
-function stepsTable(record: CheckInWithNames) {
+function stepsTable(record: CheckInWithNames, template: Template) {
   const header = new TableRow({
     tableHeader: true,
     children: ['Step', 'Where it is', 'Note'].map(
@@ -80,7 +73,7 @@ function stepsTable(record: CheckInWithNames) {
     ),
   });
 
-  const rows = STEPS.map(
+  const rows = template.steps.map(
     (step) =>
       new TableRow({
         children: [
@@ -101,7 +94,9 @@ function stepsTable(record: CheckInWithNames) {
           }),
           new TableCell({
             children: [
-              new Paragraph(formatLevel(record[step.levelColumn] as string | null)),
+              new Paragraph(
+                formatLevel(record[step.levelColumn] as string | null, template.levelLabels),
+              ),
             ],
           }),
           new TableCell({
@@ -117,7 +112,10 @@ function stepsTable(record: CheckInWithNames) {
   });
 }
 
-export async function checkInToDocx(record: CheckInWithNames): Promise<Buffer> {
+export async function checkInToDocx(
+  record: CheckInWithNames,
+  template: Template,
+): Promise<Buffer> {
   const doc = new Document({
     creator: 'Breeze Box',
     title: `Learning Cycle Check-In ${EM_DASH} ${record.site?.name ?? ''}`,
@@ -146,36 +144,42 @@ export async function checkInToDocx(record: CheckInWithNames): Promise<Buffer> {
             ],
           }),
 
-          heading(`${SECTIONS.basics.number}. ${SECTIONS.basics.title}`),
+          heading(`${template.sections.basics.number}. ${template.sections.basics.title}`),
           ...field('School', '1a', orDash(record.site?.name)),
           ...field('Principal', '1b', orDash(record.principal?.name)),
           ...field('Date', '1c', formatDate(record.checkin_date)),
           ...field(
             'Cycle and stage',
             '1d',
-            `${formatCycle(record.cycle_number)} ${EM_DASH} ${formatStage(record.stage)}`,
+            `${formatCycle(record.cycle_number)} ${EM_DASH} ${formatStage(
+              record.stage,
+              template.stageLabels,
+            )}`,
           ),
 
-          heading(`${SECTIONS.focus.number}. ${SECTIONS.focus.title}`),
+          heading(`${template.sections.focus.number}. ${template.sections.focus.title}`),
           ...field('Practice the staff is working on', '2a', orDash(record.practice)),
           ...field('Student need behind it', '2b', orDash(record.student_need)),
 
-          heading(`${SECTIONS.cycle.number}. ${SECTIONS.cycle.title}`),
+          heading(`${template.sections.cycle.number}. ${template.sections.cycle.title}`),
           new Paragraph({
             spacing: { after: 160 },
             children: [
               new TextRun({
                 text: LEVELS.map(
-                  (level) => `${LEVEL_LABELS[level]}: ${LEVEL_MEANINGS[level]}`,
+                  (level) =>
+                    `${template.levelLabels[level]}: ${template.levelMeanings[level]}`,
                 ).join('.  '),
                 italics: true,
                 size: 18,
               }),
             ],
           }),
-          stepsTable(record),
+          stepsTable(record, template),
 
-          heading(`${SECTIONS.conversation.number}. ${SECTIONS.conversation.title}`),
+          heading(
+            `${template.sections.conversation.number}. ${template.sections.conversation.title}`,
+          ),
           ...field('What is working', CONVERSATION_BOXES.working, orDash(record.working)),
           ...field(
             'What is getting in the way',

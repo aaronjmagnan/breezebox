@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getSessionContext, serverClient } from '@breezebox/auth/server';
 import type { Site, Staff } from '@breezebox/db';
+import { resolveTemplate, type Template } from './template';
 
 /**
  * Who is asking, and what they can reach.
@@ -23,6 +24,12 @@ export type ToolSession = {
   sites: Site[];
   /** True when they may pick any site; false locks the picker to their own. */
   canChooseSite: boolean;
+  /**
+   * The template with this district's label overrides applied. Resolved once
+   * here so the form, table, chart, print view and Word export all render from
+   * the same object rather than each reaching for the constant.
+   */
+  template: Template;
 };
 
 export async function requireToolSession(): Promise<ToolSession> {
@@ -42,7 +49,19 @@ export async function requireToolSession(): Promise<ToolSession> {
     query = query.eq('id', staff.site_id ?? '00000000-0000-0000-0000-000000000000');
   }
 
-  const { data: sites, error } = await query;
+  // The district's own wording for this tool, from tool_instances.config (§4).
+  // RLS scopes this to their district; a missing row just means defaults.
+  const configQuery = supabase
+    .from('tool_instances')
+    .select('config')
+    .eq('tool_slug', 'learning-cycles')
+    .maybeSingle();
+
+  const [{ data: sites, error }, { data: instance }] = await Promise.all([
+    query,
+    configQuery,
+  ]);
+
   if (error) console.error('[learning-cycles] could not load sites:', error.message);
 
   return {
@@ -50,6 +69,7 @@ export async function requireToolSession(): Promise<ToolSession> {
     districtId: staff.district_id,
     sites: sites ?? [],
     canChooseSite: staff.district_wide,
+    template: resolveTemplate(instance?.config),
   };
 }
 

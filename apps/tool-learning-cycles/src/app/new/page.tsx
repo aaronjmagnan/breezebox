@@ -26,7 +26,11 @@ export default async function NewCheckInPage() {
         {hasNoReach(session) ? (
           <NoReach />
         ) : (
-          <CheckInForm sites={session.sites} canChooseSite={session.canChooseSite} />
+          <CheckInForm
+            sites={session.sites}
+            canChooseSite={session.canChooseSite}
+            template={session.template}
+          />
         )}
       </div>
     </main>

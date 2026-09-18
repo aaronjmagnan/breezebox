@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Field, Select, TextInput } from '@breezebox/ui';
-import { CYCLES, STAGES, STAGE_LABELS } from '@/lib/template';
+import { CYCLES, STAGES, type Stage } from '@/lib/template';
 import { appHref } from '@/lib/routes';
 
 /**
@@ -12,7 +12,13 @@ import { appHref } from '@/lib/routes';
  * shareable, survives a reload, and the CSV export reuses the same query
  * string rather than reimplementing the filter.
  */
-export function Filters({ sites }: { sites: Array<{ id: string; name: string }> }) {
+export function Filters({
+  sites,
+  stageLabels,
+}: {
+  sites: Array<{ id: string; name: string }>;
+  stageLabels: Record<Stage, string>;
+}) {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -60,7 +66,7 @@ export function Filters({ sites }: { sites: Array<{ id: string; name: string }> 
               <option value="">All stages</option>
               {STAGES.map((s) => (
                 <option key={s} value={s}>
-                  {STAGE_LABELS[s]}
+                  {stageLabels[s]}
                 </option>
               ))}
             </Select>

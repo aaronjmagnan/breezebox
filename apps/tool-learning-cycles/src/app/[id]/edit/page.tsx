@@ -52,6 +52,7 @@ export default async function EditCheckInPage({
           sites={session.sites}
           canChooseSite={session.canChooseSite}
           initialStaff={staff}
+          template={session.template}
         />
       </div>
     </main>

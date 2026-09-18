@@ -1,5 +1,13 @@
 import type { CheckIn } from './checkins';
-import { STEPS, TEMPLATE_VERSION, type Level, type Stage } from './template';
+import { DEFAULT_TEMPLATE, TEMPLATE_VERSION, type Level, type Stage } from './template';
+
+/**
+ * Step KEYS and COLUMNS, never titles. A district renames what a step is
+ * called; it cannot change which column the answer lands in, so this reads the
+ * default template rather than the district's. Reading the resolved one here
+ * would be harmless today and a bug the moment structure ever varies.
+ */
+const STEPS = DEFAULT_TEMPLATE.steps;
 
 /**
  * The shape the form edits.

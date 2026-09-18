@@ -45,6 +45,57 @@ Worth knowing:
 `created_by` and `district_id` are withheld from the `UPDATE` grant, so neither
 can be moved after insert even by someone with edit rights.
 
+## Per-district wording
+
+A district may rename anything people read: section titles, the five step
+titles and hints, the three level labels and their meanings, and the stage
+names. Overrides live in `tool_instances.config`, which §4 put there for
+exactly this.
+
+```sql
+update public.tool_instances
+set config = '{
+  "labels": {
+    "sections": { "cycle": "The work" },
+    "steps":    { "pick": { "title": "Choose a focus",
+                            "hint": "Based on what student data shows" } },
+    "levels":   { "routine": { "label": "Embedded",
+                               "meaning": "just how we work now" } },
+    "stages":   { "just_starting": "Getting going" }
+  }
+}'::jsonb
+where tool_slug = 'learning-cycles'
+  and district_id = (select id from public.districts where slug = 'demo');
+```
+
+Every key is optional. Anything missing, misspelled or of the wrong type falls
+back to the default silently, so a district cannot break its own tool with a
+bad config, and an older deployment tolerates a config written for a newer one.
+Titles cap at 60 characters and hints at 160, because a label is a phrase and
+an uncapped one breaks the table, the segmented control and the print layout at
+once.
+
+### What districts cannot change
+
+Not the **number** of steps, their **order**, their **keys**, or their **box
+labels**.
+
+That line is the product decision, not a limitation. The five steps are the
+method, and the chart's whole job is to compare schools on the same five. If
+one district drops "Try it" and another adds two, "three of five are Routine"
+stops meaning anything. What a district calls a step is vocabulary; how many
+there are and what they measure is meaning.
+
+So districts change words and the platform changes structure. A structural
+change is a new `template_version` authored centrally, and records keep the
+version they were answered against.
+
+Renames apply to existing records too, deliberately: a district renaming "Pick
+one practice" to "Choose a focus" is using new words for the same question, and
+showing old records in the old vocabulary would be confusing. A change that
+alters what the question *means* is a new template version, not a label
+override.
+
 ## Access rules
 
 RLS, in `20260917110100_*.sql`. The tool does not filter by district or site

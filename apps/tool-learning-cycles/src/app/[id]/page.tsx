@@ -4,15 +4,7 @@ import { requireToolSession } from '@/lib/session';
 import { getCheckIn } from '@/lib/checkins';
 import { formatCycle, formatDate, formatLevel, formatStage } from '@/lib/format';
 import { appHref, isUuid } from '@/lib/routes';
-import {
-  CONVERSATION_BOXES,
-  LEVELS,
-  LEVEL_LABELS,
-  LEVEL_MEANINGS,
-  SECTIONS,
-  STEPS,
-  TEMPLATE_VERSION,
-} from '@/lib/template';
+import { CONVERSATION_BOXES, LEVELS } from '@/lib/template';
 import { PrintButton } from '@/components/print-button';
 
 export const dynamic = 'force-dynamic';
@@ -57,7 +49,7 @@ export default async function CheckInDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireToolSession();
+  const { template } = await requireToolSession();
   const { id } = await params;
 
   // A path that is not an id at all reaches here as one, and Postgres
@@ -93,7 +85,7 @@ export default async function CheckInDetailPage({
         <h1 className="text-lg font-semibold">Learning Cycle Check-In</h1>
         <p className="text-sm">
           {record.site?.name} &middot; {formatDate(record.checkin_date)} &middot;{' '}
-          {TEMPLATE_VERSION}
+          {record.template_version}
         </p>
       </div>
 
@@ -106,7 +98,7 @@ export default async function CheckInDetailPage({
       <div className="mt-6 flex flex-col gap-6">
         <section aria-labelledby="d-basics">
           <h2 id="d-basics" className="text-base font-semibold">
-            {SECTIONS.basics.number}. {SECTIONS.basics.title}
+            {template.sections.basics.number}. {template.sections.basics.title}
           </h2>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Box label="1a" title="School">
@@ -119,14 +111,15 @@ export default async function CheckInDetailPage({
               {formatDate(record.checkin_date)}
             </Box>
             <Box label="1d" title="Cycle and stage">
-              {formatCycle(record.cycle_number)} &middot; {formatStage(record.stage)}
+              {formatCycle(record.cycle_number)} &middot;{' '}
+              {formatStage(record.stage, template.stageLabels)}
             </Box>
           </div>
         </section>
 
         <section aria-labelledby="d-focus">
           <h2 id="d-focus" className="text-base font-semibold">
-            {SECTIONS.focus.number}. {SECTIONS.focus.title}
+            {template.sections.focus.number}. {template.sections.focus.title}
           </h2>
           <div className="mt-3 flex flex-col gap-3">
             <Box label="2a" title="Practice the staff is working on">
@@ -140,22 +133,26 @@ export default async function CheckInDetailPage({
 
         <section aria-labelledby="d-cycle">
           <h2 id="d-cycle" className="text-base font-semibold">
-            {SECTIONS.cycle.number}. {SECTIONS.cycle.title}
+            {template.sections.cycle.number}. {template.sections.cycle.title}
           </h2>
 
           <p className="mt-2 text-sm leading-relaxed text-bb-muted">
-            {LEVELS.map((level) => `${LEVEL_LABELS[level]}: ${LEVEL_MEANINGS[level]}`).join(
-              '. ',
-            )}
+            {LEVELS.map(
+              (level) =>
+                `${template.levelLabels[level]}: ${template.levelMeanings[level]}`,
+            ).join('. ')}
             .
           </p>
 
           <div className="mt-3 flex flex-col gap-3">
-            {STEPS.map((step) => (
+            {template.steps.map((step) => (
               <Box key={step.key} label={step.box} title={step.title}>
                 <p className="text-sm text-bb-muted">{step.hint}</p>
                 <p className="mt-1 font-semibold">
-                  {formatLevel(record[step.levelColumn] as string | null)}
+                  {formatLevel(
+                    record[step.levelColumn] as string | null,
+                    template.levelLabels,
+                  )}
                 </p>
                 <p className="mt-1">{orDash(record[step.noteColumn] as string | null)}</p>
               </Box>
@@ -165,7 +162,7 @@ export default async function CheckInDetailPage({
 
         <section aria-labelledby="d-conversation">
           <h2 id="d-conversation" className="text-base font-semibold">
-            {SECTIONS.conversation.number}. {SECTIONS.conversation.title}
+            {template.sections.conversation.number}. {template.sections.conversation.title}
           </h2>
           <div className="mt-3 flex flex-col gap-3">
             <Box label={CONVERSATION_BOXES.working} title="What is working">
