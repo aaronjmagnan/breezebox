@@ -2,7 +2,14 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { Button, Card, Table, type TableColumn } from '@breezebox/ui';
 import { requireToolSession, hasNoReach } from '@/lib/session';
-import { listOwnDrafts, listSubmitted, type CheckInWithNames } from '@/lib/checkins';
+import {
+  DEFAULT_SORT,
+  isSortKey,
+  listOwnDrafts,
+  listSubmitted,
+  type CheckInSort,
+  type CheckInWithNames,
+} from '@/lib/checkins';
 import { formatCycle, formatDate, formatStage } from '@/lib/format';
 import { appHref } from '@/lib/routes';
 import { Filters } from '@/components/filters';
@@ -34,21 +41,45 @@ export default async function CheckInsPage({
     typeof params[key] === 'string' ? (params[key] as string) : undefined;
   const cycle = Number.parseInt(one('cycle') ?? '', 10);
 
+  const sortParam = one('sort');
+  const sort: CheckInSort = isSortKey(sortParam)
+    ? { key: sortParam, direction: one('dir') === 'asc' ? 'asc' : 'desc' }
+    : DEFAULT_SORT;
+
+  const filters = {
+    siteId: one('site'),
+    cycleNumber: Number.isFinite(cycle) ? cycle : undefined,
+    stage: one('stage'),
+    from: one('from'),
+    to: one('to'),
+  };
+
   const [rows, drafts] = await Promise.all([
-    listSubmitted({
-      siteId: one('site'),
-      cycleNumber: Number.isFinite(cycle) ? cycle : undefined,
-      stage: one('stage'),
-      from: one('from'),
-      to: one('to'),
-    }),
+    listSubmitted(filters, sort),
     listOwnDrafts(),
   ]);
+
+  /**
+   * Sort links keep every other query parameter, so sorting a filtered view
+   * does not quietly drop the filter. Clicking the column already sorted
+   * reverses it; a different column starts descending, which is what people
+   * expect from a date-led table.
+   */
+  const sortHref = (key: string) => {
+    const next = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (typeof v === 'string' && k !== 'sort' && k !== 'dir') next.set(k, v);
+    }
+    next.set('sort', key);
+    next.set('dir', sort.key === key && sort.direction === 'desc' ? 'asc' : 'desc');
+    return `?${next.toString()}`;
+  };
 
   const columns: ReadonlyArray<TableColumn<CheckInWithNames>> = [
     {
       key: 'date',
       header: 'Date',
+      sortKey: 'date',
       cell: (row) => (
         <Link href={`/${row.id}`} className="font-semibold underline underline-offset-2">
           {formatDate(row.checkin_date)}
@@ -62,8 +93,20 @@ export default async function CheckInsPage({
       hideBelow: 'md',
       cell: (row) => row.principal?.name ?? '—',
     },
-    { key: 'cycle', header: 'Cycle', hideBelow: 'sm', cell: (row) => formatCycle(row.cycle_number) },
-    { key: 'stage', header: 'Stage', hideBelow: 'sm', cell: (row) => formatStage(row.stage) },
+    {
+      key: 'cycle',
+      header: 'Cycle',
+      sortKey: 'cycle',
+      hideBelow: 'sm',
+      cell: (row) => formatCycle(row.cycle_number),
+    },
+    {
+      key: 'stage',
+      header: 'Stage',
+      sortKey: 'stage',
+      hideBelow: 'sm',
+      cell: (row) => formatStage(row.stage),
+    },
     {
       key: 'practice',
       header: 'Practice',
@@ -148,6 +191,8 @@ export default async function CheckInsPage({
             columns={columns}
             rows={rows}
             rowKey={(row) => row.id}
+            sort={sort}
+            sortHref={sortHref}
             empty={
               <Card as="section">
                 <h3 className="text-base font-semibold">Nothing here yet</h3>

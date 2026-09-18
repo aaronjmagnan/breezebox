@@ -26,4 +26,9 @@ export {
   type ChoiceGroupProps,
   type ChoiceOption,
 } from './choice';
-export { Table, type TableProps, type TableColumn } from './table';
+export {
+  Table,
+  type TableProps,
+  type TableColumn,
+  type SortDirection,
+} from './table';

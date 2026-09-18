@@ -79,6 +79,9 @@ export default async function CheckInDetailPage({
             Back
           </Button>
           <PrintButton />
+          <Button variant="secondary" href={appHref(`/${record.id}/docx`)}>
+            Download Word
+          </Button>
           <Button variant="primary" href={appHref(`/${record.id}/edit`)}>
             Edit
           </Button>

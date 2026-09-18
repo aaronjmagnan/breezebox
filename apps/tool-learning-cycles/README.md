@@ -78,14 +78,39 @@ things the spec named plus drafts, authorship and site self-reassignment.
 
 | Route | Device | What |
 | --- | --- | --- |
-| `/` | laptop first | Table, filters, CSV export, your drafts |
+| `/` | laptop first | Table, sorting, filters, CSV export, your drafts |
 | `/new` | **phone first** | The form |
 | `/[id]` | both | Read view, and the print layout |
 | `/[id]/edit` | phone first | Same form, initial values |
 | `/chart` | laptop first | Stacked bar per school for one cycle |
 
-Filter state lives in the URL, so a filtered view is shareable and the CSV
-export reuses the same query string instead of reimplementing the filter.
+Filter and sort state both live in the URL, so a view is shareable, survives a
+reload, works without JavaScript, and the CSV export reuses the same query
+string instead of reimplementing either.
+
+Sorting a filtered view keeps the filter. Everything on the check-in sorts in
+Postgres; school name sorts in JS, because it lives on a joined row and
+PostgREST's ordering across a relationship is fragile enough that a silent
+wrong order is a real risk -- and an order that is wrong but plausible is worse
+than one that is slower.
+
+## Getting a record out
+
+| Format | How | Why |
+| --- | --- | --- |
+| **PDF** | `Print or save as PDF` -> the browser's print dialog | The print stylesheet renders the same markup as the read view, so the two cannot drift |
+| **Word** | `Download Word` -> `/[id]/docx` | People paste a check-in into a board packet, add a paragraph, track changes. A PDF cannot do that |
+| **CSV** | `Export CSV` on the list | Whatever the list is filtered and sorted to |
+
+There is deliberately **no server-side PDF**. It would need headless Chromium
+on a serverless function -- slow cold starts, bundle size limits, ongoing
+maintenance -- to produce something the browser already does from a stylesheet
+that cannot fall out of step with the screen.
+
+The Word export reads its headings, hints and 1a-4e box labels from
+`lib/template`, the same constant everything else reads, so it stays aligned
+with the paper organizer. It runs the same RLS-scoped query as the page, so the
+file can never hold a record the person could not already open.
 
 ## Autosave
 

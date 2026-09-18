@@ -33,17 +33,54 @@ export type CheckInFilters = {
   to?: string;
 };
 
+/**
+ * Sortable columns, and where each one is sorted.
+ *
+ * Everything on the check-in itself sorts in Postgres. `site` sorts in JS,
+ * because it lives on a joined row and PostgREST's ordering across a
+ * relationship is fragile enough that a silent wrong order is a real risk --
+ * and a wrong order that still looks plausible is worse than a slower one.
+ * The volume here is a district's check-ins, not a log.
+ */
+export const SORT_KEYS = ['date', 'site', 'cycle', 'stage'] as const;
+export type SortKey = (typeof SORT_KEYS)[number];
+export type SortDirection = 'asc' | 'desc';
+
+const SQL_COLUMN: Partial<Record<SortKey, string>> = {
+  date: 'checkin_date',
+  cycle: 'cycle_number',
+  stage: 'stage',
+};
+
+export function isSortKey(value: string | null | undefined): value is SortKey {
+  return value != null && (SORT_KEYS as readonly string[]).includes(value);
+}
+
+export type CheckInSort = { key: SortKey; direction: SortDirection };
+
+export const DEFAULT_SORT: CheckInSort = { key: 'date', direction: 'desc' };
+
 export async function listSubmitted(
   filters: CheckInFilters = {},
+  sort: CheckInSort = DEFAULT_SORT,
 ): Promise<CheckInWithNames[]> {
   const supabase = await serverClient();
 
   let query = supabase
     .from('learning_cycle_checkins')
     .select(WITH_NAMES)
-    .not('submitted_at', 'is', null)
-    .order('checkin_date', { ascending: false })
-    .order('created_at', { ascending: false });
+    .not('submitted_at', 'is', null);
+
+  const ascending = sort.direction === 'asc';
+  const sqlColumn = SQL_COLUMN[sort.key];
+
+  if (sqlColumn) {
+    // nullsFirst false so unanswered cycles and stages sit at the end either
+    // way, rather than a column of blanks at the top.
+    query = query.order(sqlColumn, { ascending, nullsFirst: false });
+  }
+  // Always a stable tiebreak, or rows with equal dates shuffle between loads.
+  query = query.order('created_at', { ascending: false });
 
   if (filters.siteId) query = query.eq('site_id', filters.siteId);
   if (filters.cycleNumber) query = query.eq('cycle_number', filters.cycleNumber);
@@ -56,7 +93,22 @@ export async function listSubmitted(
     console.error('[learning-cycles] list failed:', error.message);
     return [];
   }
-  return (data ?? []) as unknown as CheckInWithNames[];
+
+  const rows = (data ?? []) as unknown as CheckInWithNames[];
+
+  if (sort.key === 'site') {
+    // localeCompare so "Ánimo" sorts where a reader expects, and numeric so
+    // "School 2" comes before "School 10".
+    rows.sort((a, b) => {
+      const result = (a.site?.name ?? '').localeCompare(b.site?.name ?? '', undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      });
+      return ascending ? result : -result;
+    });
+  }
+
+  return rows;
 }
 
 /**
