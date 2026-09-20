@@ -422,6 +422,54 @@ export type Database = {
           },
         ];
       };
+      learning_cycle_checkin_revisions: {
+        Row: {
+          id: string;
+          checkin_id: string;
+          district_id: string;
+          site_id: string;
+          changed_by: string | null;
+          changed_at: string;
+          action: string;
+          changes: Json;
+        };
+        Insert: {
+          id?: string;
+          checkin_id: string;
+          district_id: string;
+          site_id: string;
+          changed_by?: string | null;
+          changed_at?: string;
+          action: string;
+          changes?: Json;
+        };
+        Update: {
+          id?: string;
+          checkin_id?: string;
+          district_id?: string;
+          site_id?: string;
+          changed_by?: string | null;
+          changed_at?: string;
+          action?: string;
+          changes?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'learning_cycle_checkin_revisions_checkin_id_fkey';
+            columns: ['checkin_id'];
+            isOneToOne: false;
+            referencedRelation: 'learning_cycle_checkins';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'learning_cycle_checkin_revisions_changed_by_fkey';
+            columns: ['changed_by'];
+            isOneToOne: false;
+            referencedRelation: 'staff';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       access_log: {
         Row: {
           id: number;

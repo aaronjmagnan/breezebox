@@ -125,6 +125,39 @@ Also:
 Tests: `pnpm --filter @breezebox/db test:lcc` — 20 assertions, including both
 things the spec named plus drafts, authorship and site self-reassignment.
 
+## Document control
+
+A submitted check-in keeps a history: who changed what, and when. It appears on
+the detail page, below the record.
+
+Two decisions worth knowing.
+
+**The trail is a database trigger, not application code.** An audit trail
+written by the app is an audit trail with a back door -- a write through the
+SQL editor, the service role, or a future admin panel would simply not appear.
+`app.record_lcc_revision()` fires on the table, so every path is covered
+whether or not it knows the trail exists.
+
+**It starts at submit.** The form autosaves roughly every 1.2 seconds while
+someone types; recording each of those would bury the handful of real edits
+under hundreds of keystroke saves. A draft is working state. The record becomes
+a document when it is submitted, and from then on every change is kept,
+including what the field said before.
+
+Nobody signed in can insert, alter or delete a revision -- those privileges are
+revoked outright, and the trigger writes as the table owner regardless.
+Otherwise an edit could be covered up by editing its own history.
+
+`changed_by` is null when a change did not come from a signed-in session. That
+is not a gap; it is the trail saying so.
+
+The history is on screen only, not in the print view or the Word export: those
+are the record as it stands, which is what someone takes into a meeting.
+
+Not built: **locking a record after submit**. Anyone in reach can still edit a
+submitted check-in, and the trail records it. Add the lock if corrections
+should be a deliberate act rather than a quiet one.
+
 ## Screens
 
 | Route | Device | What |

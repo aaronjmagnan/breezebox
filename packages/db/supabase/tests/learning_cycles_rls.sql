@@ -276,6 +276,133 @@ $$;
 
 reset role;
 
+-- ---------------------------------------------------------------------------
+-- 6. Document control: the revision trail
+-- ---------------------------------------------------------------------------
+
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"d0000000-0000-4000-8000-00000000d001","role":"authenticated","email":"director@alpha.test"}',
+  true);
+
+do $$
+declare
+  v_s1 uuid := '11110000-0000-4000-8000-000000000001';
+  v_draft uuid;
+  v_live uuid;
+  v_changes jsonb;
+begin
+  -- A draft, autosaved several times, leaves no trail: it is working state,
+  -- not a document.
+  insert into public.learning_cycle_checkins
+    (district_id, site_id, created_by, checkin_date, practice)
+  values (app.current_district_id(), v_s1, app.current_staff_id(), current_date, 'first')
+  returning id into v_draft;
+
+  update public.learning_cycle_checkins set practice = 'second' where id = v_draft;
+  update public.learning_cycle_checkins set practice = 'third' where id = v_draft;
+
+  perform pg_temp.assert_eq('a draft and its autosaves leave no revisions',
+    (select count(*) from public.learning_cycle_checkin_revisions
+     where checkin_id = v_draft), 0);
+
+  -- Submitting is the first controlled version.
+  update public.learning_cycle_checkins
+  set submitted_at = now() where id = v_draft;
+
+  perform pg_temp.assert_eq('submitting records one revision',
+    (select count(*) from public.learning_cycle_checkin_revisions
+     where checkin_id = v_draft), 1);
+  perform pg_temp.assert_eq('...and it is marked submitted',
+    (select count(*) from public.learning_cycle_checkin_revisions
+     where checkin_id = v_draft and action = 'submitted'), 1);
+
+  -- Every edit after that is kept, with what moved and who moved it.
+  update public.learning_cycle_checkins
+  set practice = 'corrected', next_step = 'call the principal'
+  where id = v_draft;
+
+  perform pg_temp.assert_eq('an edit after submission is recorded',
+    (select count(*) from public.learning_cycle_checkin_revisions
+     where checkin_id = v_draft and action = 'edited'), 1);
+
+  select changes into v_changes
+  from public.learning_cycle_checkin_revisions
+  where checkin_id = v_draft and action = 'edited';
+
+  perform pg_temp.assert_eq('the revision names both changed fields',
+    (select count(*) from jsonb_object_keys(v_changes)), 2);
+  if v_changes -> 'practice' ->> 'from' <> 'third'
+     or v_changes -> 'practice' ->> 'to' <> 'corrected' then
+    raise exception 'FAIL: before and after wrong: %', v_changes -> 'practice';
+  end if;
+  raise notice 'ok    the revision keeps what it said before';
+  if v_changes ? 'updated_at' then
+    raise exception 'FAIL: updated_at is noise and should not be recorded';
+  end if;
+  raise notice 'ok    updated_at is not recorded as a change';
+
+  perform pg_temp.assert_eq('the author is recorded',
+    (select count(*) from public.learning_cycle_checkin_revisions
+     where checkin_id = v_draft and changed_by = app.current_staff_id()), 2);
+
+  -- An update that changes nothing is not a revision.
+  update public.learning_cycle_checkins
+  set practice = 'corrected' where id = v_draft;
+  perform pg_temp.assert_eq('a no-op update adds no revision',
+    (select count(*) from public.learning_cycle_checkin_revisions
+     where checkin_id = v_draft), 2);
+
+  -- The trail cannot be rewritten by the person who wrote it.
+  perform pg_temp.assert_denied('nobody can insert a revision by hand',
+    format('insert into public.learning_cycle_checkin_revisions
+              (checkin_id, district_id, site_id, action)
+            values (%L, app.current_district_id(), %L, ''edited'')', v_draft, v_s1));
+  perform pg_temp.assert_denied('nobody can alter a revision',
+    'update public.learning_cycle_checkin_revisions set changes = ''{}''::jsonb');
+  perform pg_temp.assert_denied('nobody can delete a revision',
+    'delete from public.learning_cycle_checkin_revisions');
+end;
+$$;
+
+reset role;
+
+-- A site-bound principal sees the history of their own site and no other.
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"d0000000-0000-4000-8000-00000000d003","role":"authenticated","email":"principal2@alpha.test"}',
+  true);
+
+do $$
+begin
+  perform pg_temp.assert_eq('a principal sees no revisions from another site',
+    (select count(*) from public.learning_cycle_checkin_revisions
+     where site_id = '11110000-0000-4000-8000-000000000001'), 0);
+end;
+$$;
+
+reset role;
+
+-- The other district sees none of it.
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"d0000000-0000-4000-8000-00000000d005","role":"authenticated","email":"director@beta.test"}',
+  true);
+
+do $$
+begin
+  -- Beta has one submitted check-in of its own in the fixtures, so it has one
+  -- revision of its own and must see exactly that one.
+  perform pg_temp.assert_eq('beta sees none of alpha''s revisions',
+    (select count(*) from public.learning_cycle_checkin_revisions
+     where district_id = 'aa000000-0000-4000-8000-00000000000a'), 0);
+  perform pg_temp.assert_eq('beta sees its own revision and only that',
+    (select count(*) from public.learning_cycle_checkin_revisions), 1);
+end;
+$$;
+
+reset role;
+
 do $$ begin raise notice 'Learning Cycle Check-In access checks passed'; end; $$;
 
 rollback;

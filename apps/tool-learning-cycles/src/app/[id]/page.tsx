@@ -2,9 +2,11 @@ import { notFound } from 'next/navigation';
 import { Button } from '@breezebox/ui';
 import { requireToolSession } from '@/lib/session';
 import { getCheckIn } from '@/lib/checkins';
+import { listRevisions } from '@/lib/revisions';
 import { formatCycle, formatDate, formatLevel, formatStage } from '@/lib/format';
 import { appHref, isUuid } from '@/lib/routes';
 import { CONVERSATION_BOXES, LEVELS } from '@/lib/template';
+import { History } from '@/components/history';
 import { PrintButton } from '@/components/print-button';
 
 export const dynamic = 'force-dynamic';
@@ -61,6 +63,8 @@ export default async function CheckInDetailPage({
   if (!record) notFound();
 
   const isDraft = record.submitted_at === null;
+  // Drafts have no history by design: the trail starts at submission.
+  const revisions = isDraft ? [] : await listRevisions(record.id);
 
   return (
     <main className="print-sheet mx-auto w-full max-w-3xl px-4 py-6">
@@ -185,6 +189,8 @@ export default async function CheckInDetailPage({
             </Box>
           </div>
         </section>
+
+        <History revisions={revisions} template={template} />
       </div>
     </main>
   );
