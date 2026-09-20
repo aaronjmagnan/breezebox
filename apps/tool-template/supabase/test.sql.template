@@ -1,0 +1,66 @@
+-- __TOOL_NAME__ :: access rules
+--
+-- Copy to packages/db/supabase/tests/__TOOL_SLUG___rls.sql and fill in.
+--
+-- Prove at least these four. They are the ones that fail silently in
+-- production and pass silently in development, where you are the only
+-- district and have district-wide reach.
+--
+--   1. a user in district A cannot see district B's rows
+--   2. a site-bound user cannot see another site's rows
+--   3. a brand new SSO user -- no site, no district_wide -- sees nothing
+--   4. created_by cannot be forged
+--
+-- Run against the LOCAL stack. Everything is inside a transaction that rolls
+-- back, so it leaves no fixtures behind.
+
+\set ON_ERROR_STOP on
+
+begin;
+
+create function pg_temp.assert_eq(label text, got bigint, want bigint)
+returns void language plpgsql as $$
+begin
+  if got is distinct from want then
+    raise exception 'FAIL %: got %, want %', label, got, want;
+  end if;
+  raise notice 'ok    %', label;
+end;
+$$;
+
+-- A BEFORE trigger runs ahead of the RLS WITH CHECK, so a cross-district
+-- reference is caught as check_violation while an out-of-reach one is caught
+-- as insufficient_privilege. Both mean refused.
+create function pg_temp.assert_denied(label text, stmt text)
+returns void language plpgsql as $$
+declare v_denied boolean := false;
+begin
+  begin
+    execute stmt;
+  exception
+    when insufficient_privilege or check_violation then v_denied := true;
+  end;
+  if not v_denied then
+    raise exception 'FAIL %: expected denial, but the statement succeeded', label;
+  end if;
+  raise notice 'ok    % (denied)', label;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Fixtures: two districts, two sites in the first
+-- ---------------------------------------------------------------------------
+-- See packages/db/supabase/tests/learning_cycles_rls.sql for a worked example,
+-- including how to stand up auth.users rows and set request.jwt.claims.
+
+-- ---------------------------------------------------------------------------
+-- Act as each user with:
+--   set local role authenticated;
+--   select set_config('request.jwt.claims',
+--     '{"sub":"<auth user id>","role":"authenticated","email":"..."}', true);
+-- ...then reset role; between them.
+-- ---------------------------------------------------------------------------
+
+do $$ begin raise notice '__TOOL_NAME__ access checks passed'; end; $$;
+
+rollback;

@@ -18,6 +18,8 @@ Hostname routing, auth, shell UI, and PWA are next.
 ```
 apps/
   shell/            district landing page, PWA manifest, the only service worker
+  tool-template/    the scaffold new tools are cut from (not a workspace package)
+  tool-learning-cycles/   Learning Cycle Check-In, a data tool (§7)
 packages/
   ui/               shared design system components  (stub)
   db/               schema, migrations, RLS policies, generated types
@@ -25,11 +27,21 @@ packages/
   pwa/              capture queue, update prompt, install guide  (stub)
 ```
 
-Two apps from §2 are deliberately **not** here yet:
+### Starting a new tool
 
-- **`apps/tool-template`** — the scaffold every new tool is copied from. It
-  gets built alongside the first real tool, so it encodes a pattern that has
-  actually shipped once rather than a guess.
+```bash
+pnpm new-tool coaching-tracker "Coaching Tracker"
+```
+
+Cuts a new tool from `apps/tool-template` and prints the steps that cannot be
+automated. The scaffold was taken from the first real tool rather than guessed
+at, so it carries the decisions that were expensive to learn: the reach model,
+the basePath rule, date handling, CSV quoting, and a migration that has
+`district_id` and RLS policies in it before any UI exists. See
+[apps/tool-template/README.md](apps/tool-template/README.md).
+
+One app from §2 is still **not** here:
+
 - **`apps/admin`** — the super-admin control panel (§10). Separate domain, not
   a PWA, no service worker, laptop only. It is what creates district rows, so
   until it exists districts are created with SQL (see

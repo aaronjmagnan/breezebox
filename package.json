@@ -8,6 +8,7 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rm -rf node_modules",
+    "new-tool": "node scripts/new-tool.mjs",
     "db:start": "pnpm --filter @breezebox/db start",
     "db:stop": "pnpm --filter @breezebox/db stop",
     "db:reset": "pnpm --filter @breezebox/db reset",

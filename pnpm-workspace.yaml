@@ -1,3 +1,7 @@
 packages:
   - "apps/*"
   - "packages/*"
+  # The scaffold new tools are cut from. Not a package: its files hold
+  # placeholders, so linking or typechecking it would fail. `pnpm new-tool`
+  # copies it out and substitutes the names.
+  - "!apps/tool-template"

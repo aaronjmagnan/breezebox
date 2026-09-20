@@ -1,0 +1,131 @@
+-- __TOOL_NAME__ :: __TOOL_TABLE__
+--
+-- HOW TO USE THIS FILE
+--   1. Copy it to packages/db/supabase/migrations/YYYYMMDDHHMMSS___TOOL_SLUG__.sql
+--   2. Replace the columns below with the tool's own
+--   3. Run it, then run the test file next to this one
+--   4. Only then write any UI (§3)
+--
+-- THE RULES THAT DO NOT BEND (§3)
+--   Every table carries district_id.
+--   Every table gets RLS policies before any UI reads or writes it.
+--   "Which school" is sites.id. "Which person" is staff.id. Never a local id.
+--
+-- §3 says the second one is the rule most likely to get skipped under deadline
+-- pressure and the most costly to retrofit. It is also the one nothing will
+-- remind you about: a table without policies works perfectly in development,
+-- where you are the only district.
+
+create table public.__TOOL_TABLE__ (
+  id uuid primary key default gen_random_uuid(),
+
+  -- Not optional. Not nullable unless you can say why.
+  district_id uuid not null references public.districts (id) on delete cascade,
+
+  -- Most tools are per-school. Drop this only if the record genuinely belongs
+  -- to the district as a whole; the reach model below is built on it.
+  site_id uuid not null references public.sites (id) on delete restrict,
+
+  -- Set from the session by the RLS check, never from a form.
+  created_by uuid not null references public.staff (id) on delete restrict,
+
+  -- An impact tool (§7) adds staff_id here, and every record carries one.
+  -- staff_id uuid references public.staff (id) on delete set null,
+
+  -- ---- the tool's own columns go here ----
+  -- Prefer check constraints over enums for tool-local sets: a sixth option
+  -- is then an alter constraint, not a type migration.
+
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index __TOOL_TABLE___district_site_idx
+  on public.__TOOL_TABLE__ (district_id, site_id, created_at desc);
+
+create trigger __TOOL_TABLE___set_updated_at
+  before update on public.__TOOL_TABLE__
+  for each row execute function app.set_updated_at();
+
+-- Every foreign row must belong to the same district as this one. Without
+-- this, a row can read as one district's while pointing at another's.
+create or replace function app.assert___TOOL_TABLE___refs_in_district()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_district uuid;
+begin
+  select s.district_id into v_district from public.sites s where s.id = new.site_id;
+  if v_district is distinct from new.district_id then
+    raise exception 'site % does not belong to district %', new.site_id, new.district_id
+      using errcode = 'check_violation';
+  end if;
+
+  select st.district_id into v_district
+  from public.staff st where st.id = new.created_by;
+  if v_district is distinct from new.district_id then
+    raise exception 'created_by % does not belong to district %',
+      new.created_by, new.district_id
+      using errcode = 'check_violation';
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger __TOOL_TABLE___assert_refs
+  before insert or update of site_id, created_by, district_id
+  on public.__TOOL_TABLE__
+  for each row execute function app.assert___TOOL_TABLE___refs_in_district();
+
+-- ===========================================================================
+-- RLS (§3) -- written before any UI exists
+-- ===========================================================================
+
+alter table public.__TOOL_TABLE__ enable row level security;
+
+revoke all on public.__TOOL_TABLE__ from anon;
+
+-- app.current_district_id() is null when the caller has no active staff row,
+-- and `district_id = null` is null rather than true, so the default is deny.
+-- app.can_reach_site() is false for a caller with neither a site nor
+-- district_wide, which is exactly where a new SSO user starts.
+
+create policy __TOOL_TABLE___select
+  on public.__TOOL_TABLE__ for select to authenticated
+  using (
+    district_id = app.current_district_id()
+    and app.can_reach_site(site_id)
+  );
+
+create policy __TOOL_TABLE___insert
+  on public.__TOOL_TABLE__ for insert to authenticated
+  with check (
+    district_id = app.current_district_id()
+    and app.can_reach_site(site_id)
+    and created_by = app.current_staff_id()
+  );
+
+create policy __TOOL_TABLE___update
+  on public.__TOOL_TABLE__ for update to authenticated
+  using (
+    district_id = app.current_district_id()
+    and app.can_reach_site(site_id)
+  )
+  with check (
+    district_id = app.current_district_id()
+    and app.can_reach_site(site_id)
+  );
+
+-- No delete policy by default. Add one only if the tool genuinely deletes.
+
+-- district_id and created_by are decided at insert and never move afterwards.
+-- A policy cannot express "these columns are frozen"; a column grant can.
+revoke update on public.__TOOL_TABLE__ from authenticated;
+grant update (
+  site_id
+  -- , every other column the tool lets people edit
+) on public.__TOOL_TABLE__ to authenticated;

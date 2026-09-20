@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm build",
+  "ignoreCommand": "npx --yes turbo-ignore @breezebox/tool-__TOOL_SLUG__",
+  "github": { "silent": true },
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/__TOOL_SLUG__",
+      "permanent": false
+    }
+  ]
+}
