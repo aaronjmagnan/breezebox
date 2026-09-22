@@ -107,3 +107,26 @@ cross join lateral (values
 where d.slug = 'demo'
   and s.name = case when v.cycle = 2 then 'Summit High School' else 'Riverside Elementary' end
 on conflict do nothing;
+
+-- ---------------------------------------------------------------------------
+-- Ed Code Assistant (reference tool, §7)
+-- ---------------------------------------------------------------------------
+
+insert into public.tool_instances (
+  district_id, tool_type, tool_slug, name, description, icon, accent, sort_order
+)
+select d.id, 'data', 'ed-code', 'Ed Code Assistant',
+       'Ask about California school law and get the sections back.', 'book', 'blue', 20
+from public.districts d
+where d.slug = 'demo'
+on conflict (district_id, tool_slug) do nothing;
+
+-- No legal_sources row here on purpose. The library is loaded by the ingest
+-- CLI, with the service role, from a laptop:
+--
+--   pnpm --filter @breezebox/tool-ed-code ingest ed-code --dry-run
+--   pnpm --filter @breezebox/tool-ed-code ingest ed-code
+--
+-- Seeding a source with no documents behind it would put a tile on the shell
+-- that answers every question with "nothing matches", which reads as the law
+-- being silent rather than as the corpus being empty.

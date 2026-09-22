@@ -508,6 +508,192 @@ export type Database = {
           },
         ];
       };
+      legal_sources: {
+        Row: {
+          id: string;
+          district_id: string | null;
+          kind: Database['public']['Enums']['legal_source_kind'];
+          slug: string;
+          title: string;
+          publisher: string | null;
+          home_url: string | null;
+          status: Database['public']['Enums']['legal_source_status'];
+          retrieved_at: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          district_id?: string | null;
+          kind: Database['public']['Enums']['legal_source_kind'];
+          slug: string;
+          title: string;
+          publisher?: string | null;
+          home_url?: string | null;
+          status?: Database['public']['Enums']['legal_source_status'];
+          retrieved_at?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          district_id?: string | null;
+          kind?: Database['public']['Enums']['legal_source_kind'];
+          slug?: string;
+          title?: string;
+          publisher?: string | null;
+          home_url?: string | null;
+          status?: Database['public']['Enums']['legal_source_status'];
+          retrieved_at?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'legal_sources_district_id_fkey';
+            columns: ['district_id'];
+            isOneToOne: false;
+            referencedRelation: 'districts';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      legal_documents: {
+        Row: {
+          id: string;
+          source_id: string;
+          district_id: string | null;
+          citation: string;
+          citation_key: string;
+          designation: string | null;
+          title: string;
+          breadcrumb: string | null;
+          body: string;
+          url: string | null;
+          adopted_on: string | null;
+          revised_on: string | null;
+          sort_key: string | null;
+          content_hash: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          source_id: string;
+          district_id?: string | null;
+          citation: string;
+          citation_key: string;
+          designation?: string | null;
+          title: string;
+          breadcrumb?: string | null;
+          body: string;
+          url?: string | null;
+          adopted_on?: string | null;
+          revised_on?: string | null;
+          sort_key?: string | null;
+          content_hash: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          source_id?: string;
+          district_id?: string | null;
+          citation?: string;
+          citation_key?: string;
+          designation?: string | null;
+          title?: string;
+          breadcrumb?: string | null;
+          body?: string;
+          url?: string | null;
+          adopted_on?: string | null;
+          revised_on?: string | null;
+          sort_key?: string | null;
+          content_hash?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'legal_documents_source_id_fkey';
+            columns: ['source_id'];
+            isOneToOne: false;
+            referencedRelation: 'legal_sources';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'legal_documents_district_id_fkey';
+            columns: ['district_id'];
+            isOneToOne: false;
+            referencedRelation: 'districts';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      legal_chunks: {
+        Row: {
+          id: string;
+          document_id: string;
+          source_id: string;
+          district_id: string | null;
+          chunk_index: number;
+          citation: string;
+          title: string;
+          heading: string | null;
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          document_id: string;
+          source_id: string;
+          district_id?: string | null;
+          chunk_index: number;
+          citation: string;
+          title: string;
+          heading?: string | null;
+          content: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          document_id?: string;
+          source_id?: string;
+          district_id?: string | null;
+          chunk_index?: number;
+          citation?: string;
+          title?: string;
+          heading?: string | null;
+          content?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'legal_chunks_document_id_fkey';
+            columns: ['document_id'];
+            isOneToOne: false;
+            referencedRelation: 'legal_documents';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'legal_chunks_source_id_fkey';
+            columns: ['source_id'];
+            isOneToOne: false;
+            referencedRelation: 'legal_sources';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'legal_chunks_district_id_fkey';
+            columns: ['district_id'];
+            isOneToOne: false;
+            referencedRelation: 'districts';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -532,6 +718,44 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: undefined;
       };
+      search_legal_chunks: {
+        Args: {
+          p_terms: string[];
+          p_kinds?: Database['public']['Enums']['legal_source_kind'][] | null;
+          p_limit?: number;
+        };
+        Returns: {
+          chunk_id: string;
+          document_id: string;
+          source_slug: string;
+          source_title: string;
+          kind: Database['public']['Enums']['legal_source_kind'];
+          citation: string;
+          title: string;
+          heading: string | null;
+          breadcrumb: string | null;
+          url: string | null;
+          retrieved_at: string | null;
+          chunk_index: number;
+          content: string;
+          rank: number;
+        }[];
+      };
+      lookup_legal_documents: {
+        Args: { p_citations: string[]; p_limit?: number };
+        Returns: {
+          document_id: string;
+          source_slug: string;
+          source_title: string;
+          kind: Database['public']['Enums']['legal_source_kind'];
+          citation: string;
+          title: string;
+          breadcrumb: string | null;
+          url: string | null;
+          retrieved_at: string | null;
+          body: string;
+        }[];
+      };
     };
     Enums: {
       accent_color: 'blue' | 'teal' | 'amber' | 'coral';
@@ -555,6 +779,8 @@ export type Database = {
         | 'closed';
       tool_instance_status: 'active' | 'disabled' | 'coming_soon';
       tool_type: 'data' | 'workflow' | 'impact';
+      legal_source_kind: 'ed_code' | 'board_policy' | 'other';
+      legal_source_status: 'active' | 'archived';
     };
     CompositeTypes: { [_ in never]: never };
   };

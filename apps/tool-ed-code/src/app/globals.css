@@ -1,0 +1,46 @@
+@import '@breezebox/ui/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-bb-bg font-sans text-bb-text antialiased;
+  }
+}
+
+/*
+ * Print: an answer with its sources, which is the thing anyone would take into
+ * a meeting. The question box and the buttons go; the citations stay, because
+ * an answer without them is not worth printing.
+ */
+@media print {
+  @page {
+    size: letter;
+    margin: 0.6in;
+  }
+
+  .print-hide {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .print-sheet {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  a[href]::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.75em;
+    word-break: break-all;
+  }
+}

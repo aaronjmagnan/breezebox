@@ -112,6 +112,23 @@ Tool env vars on the shell are **per environment**. Point preview at the tool's
 preview URL and production at production, or preview traffic silently proxies
 into production data.
 
+### The tools so far
+
+| Tool | Root Directory | Shell env var | Its own extra env |
+| --- | --- | --- | --- |
+| Learning Cycle Check-In | `apps/tool-learning-cycles` | `TOOL_LEARNING_CYCLES_ORIGIN` | none |
+| Ed Code Assistant | `apps/tool-ed-code` | `TOOL_ED_CODE_ORIGIN` | `ANTHROPIC_API_KEY` |
+
+`ANTHROPIC_API_KEY` goes on the **Ed Code project**, with no `NEXT_PUBLIC_`
+prefix. It is read on the server only; a `NEXT_PUBLIC_` key is inlined into the
+browser bundle and is then public in the ordinary sense of the word.
+
+The Ed Code Assistant has one more step after deploying, because a deployment
+does not load its library. See
+[apps/tool-ed-code/README.md](../apps/tool-ed-code/README.md): the ingest CLI is
+run once from a laptop with the service role key, and until it has been, the
+tool says it has nothing to search rather than answering from the model.
+
 `ignoreCommand` in `vercel.json` runs `turbo-ignore`, so a project only
 rebuilds when its own code or its dependencies changed. Editing a tool will not
 redeploy the shell.

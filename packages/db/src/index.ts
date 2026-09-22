@@ -30,6 +30,9 @@ export type ToolInstance = Tables<'tool_instances'>;
 export type SupportTicket = Tables<'support_tickets'>;
 export type AccessLogEntry = Tables<'access_log'>;
 export type LearningCycleCheckIn = Tables<'learning_cycle_checkins'>;
+export type LegalSource = Tables<'legal_sources'>;
+export type LegalDocument = Tables<'legal_documents'>;
+export type LegalChunk = Tables<'legal_chunks'>;
 
 // --- Enum aliases -----------------------------------------------------------
 
@@ -43,6 +46,8 @@ export type ToolInstanceStatus = Enums<'tool_instance_status'>;
 export type AccentColor = Enums<'accent_color'>;
 export type TicketSource = Enums<'ticket_source'>;
 export type TicketStatus = Enums<'ticket_status'>;
+export type LegalSourceKind = Enums<'legal_source_kind'>;
+export type LegalSourceStatus = Enums<'legal_source_status'>;
 
 /**
  * What get_district_branding() returns for a hostname: the only district
@@ -51,6 +56,18 @@ export type TicketStatus = Enums<'ticket_status'>;
  */
 export type DistrictBranding =
   Database['public']['Functions']['get_district_branding']['Returns'][number];
+
+/**
+ * One ranked passage from the legal library, as search_legal_chunks() returns
+ * it. This is what the Ed Code Assistant puts in front of Claude and then
+ * shows as a citation, so the two can never disagree.
+ */
+export type LegalPassage =
+  Database['public']['Functions']['search_legal_chunks']['Returns'][number];
+
+/** A whole section or policy, as lookup_legal_documents() returns it. */
+export type LegalLookup =
+  Database['public']['Functions']['lookup_legal_documents']['Returns'][number];
 
 /** The four §6 accents, in the order the design tokens list them. */
 export const ACCENT_COLORS = ['blue', 'teal', 'amber', 'coral'] as const;

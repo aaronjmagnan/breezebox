@@ -217,6 +217,49 @@ districts, so do that once by hand before any district goes live:
 
 ---
 
+## 9. Ed Code Assistant
+
+The grounding is the product. Everything here is checking that the tool refuses
+to answer from the model.
+
+Before anything else, the library has to be loaded once, from a laptop:
+
+```bash
+pnpm --filter @breezebox/tool-ed-code ingest ed-code --dry-run --limit 5
+```
+
+- [ ] The dry run prints real section text, not an empty list. **Zero sections
+      found means the parser needs fixing, not that the page is empty**
+- [ ] After a full run, `ingest status` shows a document count in the thousands
+
+Then, signed in as a normal user:
+
+- [ ] Ask a real question you already know the answer to. The answer cites
+      sections, and the section numbers are ones that actually exist
+- [ ] Every claim in the answer carries a bracketed number, and every number
+      links to a source card below it
+- [ ] Open "Read the full text" on a citation. The section on leginfo says what
+      the answer said it says. **This is the check that matters most**
+- [ ] Ask something with no answer in the Education Code ("what is the capital
+      of France"). It declines rather than answering
+- [ ] Ask a school question the corpus cannot answer. It says it came up empty
+      rather than producing a plausible section number
+- [ ] Ask by section number ("what does 48900 say"). The section comes back
+      whole, at the top
+- [ ] On a 360px phone, the question box, the answer and the sources all fit
+      with no sideways scrolling
+- [ ] Reload the page. There is no history and no saved answer: nothing was
+      stored, which is the intent
+- [ ] Before board policy is loaded, the page says answers cover state law only
+
+Cross-district, once board policy is loaded for one district:
+
+- [ ] District A's user searching a policy topic gets A's wording
+- [ ] District B's user gets B's wording, never A's
+- [ ] Both get the same Education Code sections
+
+---
+
 ## What to record
 
 For anything that fails, capture: device, OS version, browser, installed or

@@ -18,6 +18,11 @@ export const TOOL_ZONES = [
     slug: 'learning-cycles',
     envVar: 'TOOL_LEARNING_CYCLES_ORIGIN',
   },
+  {
+    // Ed Code Assistant. Reference tool (§7, filed as 'data'), offline "none".
+    slug: 'ed-code',
+    envVar: 'TOOL_ED_CODE_ORIGIN',
+  },
 ];
 
 /**

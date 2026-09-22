@@ -20,6 +20,7 @@ apps/
   shell/            district landing page, PWA manifest, the only service worker
   tool-template/    the scaffold new tools are cut from (not a workspace package)
   tool-learning-cycles/   Learning Cycle Check-In, a data tool (§7)
+  tool-ed-code/     Ed Code Assistant, a reference tool (§7)
 packages/
   ui/               shared design system components  (stub)
   db/               schema, migrations, RLS policies, generated types
@@ -49,7 +50,7 @@ One app from §2 is still **not** here:
 
 Each tool deploys independently and is served under the district origin at
 `/{tool-slug}` via Next.js multi-zones. The shell is the default zone; the
-registry lives in `apps/shell/src/config/tool-zones.mjs` and is empty today.
+registry lives in `apps/shell/src/config/tool-zones.mjs`.
 
 ## Local setup
 
@@ -77,10 +78,18 @@ resolve to `127.0.0.1` in every current browser with no `/etc/hosts` edit.
 pnpm --filter @breezebox/db test
 ```
 
-Runs `packages/db/supabase/tests/rls_isolation.sql`: 60 assertions covering
-cross-district reads and writes, privilege escalation, wrong-domain sign-in,
-and first-login provisioning. It runs inside a transaction that rolls back, so
-it leaves your local data alone.
+```bash
+pnpm --filter @breezebox/db test       # 62 assertions, the core tables
+pnpm --filter @breezebox/db test:lcc   # 35 assertions, Learning Cycle Check-In
+pnpm --filter @breezebox/db test:legal # 53 assertions, the legal library
+pnpm --filter @breezebox/db test:all   # all three
+```
+
+`rls_isolation.sql` covers cross-district reads and writes, privilege
+escalation, wrong-domain sign-in, and first-login provisioning.
+`legal_library_rls.sql` covers the one place the §3 shape is bent: the legal
+library's `district_id` is nullable, and null means shared. Each suite runs
+inside a transaction that rolls back, so they leave your local data alone.
 
 ## Hostname routing (§8)
 
@@ -404,7 +413,7 @@ Two things that will bite you:
 Automated:
 
 ```bash
-pnpm --filter @breezebox/db test   # 60 RLS assertions, cross-district isolation
+pnpm --filter @breezebox/db test:all   # 150 RLS assertions across three suites
 pnpm typecheck && pnpm build
 ```
 
@@ -458,6 +467,9 @@ See `.env.example` for the annotated list. The ones that matter:
 | `SUPABASE_SERVICE_ROLE_KEY` | server only | **Bypasses RLS.** Never `NEXT_PUBLIC_`, never in the shell |
 | `NEXT_PUBLIC_DEFAULT_DISTRICT_SLUG` | shell | District for hostnames carrying no slug (bare localhost, preview URLs). **Remove from production** once a wildcard domain resolves |
 | `SUPABASE_PROJECT_ID` | CLI only | For `db:push` and `types:remote` |
+| `TOOL_LEARNING_CYCLES_ORIGIN` | shell | Bare origin of that tool's deployment, no `/learning-cycles` on the end |
+| `TOOL_ED_CODE_ORIGIN` | shell | Bare origin of the Ed Code Assistant's deployment |
+| `ANTHROPIC_API_KEY` | tool-ed-code | **Server secret.** Never `NEXT_PUBLIC_` |
 
 ## Adding a district
 
@@ -542,6 +554,15 @@ pressure:
 5. District data from Supabase is network-only. Never cached by the service
    worker (§11).
 
+The legal library in `tool-ed-code` bends rule 1, on purpose and in writing:
+its `district_id` is nullable because the Education Code is state law and one
+copy serves every district. The tenancy predicate becomes
+`district_id is null or district_id = app.current_district_id()`, board policy
+is still forced to have a district, and
+`packages/db/supabase/tests/legal_library_rls.sql` holds the line. Bending it
+again needs the same treatment: the exception stated in the migration, and a
+test suite that proves the walls still stand.
+
 ## Commands
 
 | Command | What it does |
@@ -553,4 +574,5 @@ pressure:
 | `pnpm db:reset` | Re-run every migration and reseed |
 | `pnpm db:types` | Regenerate `packages/db/src/types.ts` |
 | `pnpm db:push` | Apply migrations to the linked remote project |
-| `pnpm --filter @breezebox/db test` | RLS isolation suite |
+| `pnpm --filter @breezebox/db test:all` | All three RLS suites |
+| `pnpm --filter @breezebox/tool-ed-code ingest status` | What is in the legal library |
