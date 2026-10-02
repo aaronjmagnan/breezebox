@@ -52,6 +52,37 @@ function normalizeHost(host: string): string {
 
 let client: ReturnType<typeof createClient<Database>> | null = null;
 
+/**
+ * fetch, but a network failure names its cause.
+ *
+ * A bare "TypeError: fetch failed" says nothing about why: the real reason
+ * (a DNS miss, a refused connection, a paused project) sits on error.cause,
+ * and supabase-js drops it before the message reaches our log. Folding the
+ * cause and the target origin into the message keeps it.
+ */
+function explainingFetch(baseUrl: string): typeof fetch {
+  let origin = baseUrl;
+  try {
+    origin = new URL(baseUrl).origin;
+  } catch {
+    // Not even a URL. Leave it as given; that is the clue.
+  }
+
+  return async (input, init) => {
+    try {
+      return await fetch(input, init);
+    } catch (error) {
+      if (!(error instanceof Error)) throw error;
+      const cause = error.cause as { code?: string; message?: string } | undefined;
+      const detail = cause?.code ?? cause?.message;
+      throw new TypeError(
+        `${error.message}${detail ? ` (${detail})` : ''} reaching ${origin}`,
+        { cause: error },
+      );
+    }
+  };
+}
+
 function getClient() {
   if (client) return client;
 
@@ -61,8 +92,20 @@ function getClient() {
   const env = supabaseEnvOrNull();
   if (!env) return null;
 
+  if (
+    process.env.NODE_ENV === 'production' &&
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(env.url)
+  ) {
+    console.error(
+      `[district] NEXT_PUBLIC_SUPABASE_URL is ${env.url}, the local stack from ` +
+        '.env.example. A deployed server cannot reach it, so every lookup will ' +
+        'fail. Set it to https://<project-ref>.supabase.co and REDEPLOY.',
+    );
+  }
+
   client = createClient<Database>(env.url, env.anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: explainingFetch(env.url) },
   });
   return client;
 }
